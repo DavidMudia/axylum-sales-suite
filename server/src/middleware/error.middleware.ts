@@ -3,8 +3,7 @@ import { Request, Response } from "express";
 import {
   registerUser,
   loginUser,
-} from "../services/auth.service";
-
+} from "../modules/auth/auth.service";
 export async function register(req: Request, res: Response) {
   const user = await registerUser(req.body);
 

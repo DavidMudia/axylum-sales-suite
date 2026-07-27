@@ -58,11 +58,12 @@ export default function PaymentDetails() {
   }
 
   const statusColors = {
-    PENDING: 'bg-yellow-100 text-yellow-700',
-    COMPLETED: 'bg-emerald-100 text-emerald-700',
-    FAILED: 'bg-red-100 text-red-700',
-    REFUNDED: 'bg-gray-100 text-gray-700',
-  };
+  PENDING: "bg-yellow-100 text-yellow-700",
+  COMPLETED: "bg-emerald-100 text-emerald-700",
+  FAILED: "bg-red-100 text-red-700",
+  REFUNDED: "bg-gray-100 text-gray-700",
+  CANCELLED: "bg-red-100 text-red-700",
+};
 
   const isPending = payment.status === 'PENDING';
   const remainingRefundable = payment.status === 'COMPLETED' ? payment.amount - (payment.refundedAmount || 0) : 0;

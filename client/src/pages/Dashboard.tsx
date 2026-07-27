@@ -25,6 +25,8 @@ import QuickActions from "../components/dashboard/QuickActions";
 import RecentOrders from "../components/dashboard/RecentOrders";
 import ActivityFeed from "../components/dashboard/ActivityFeed";
 
+import type { Product } from "../api/product"; // ✅ added
+
 export default function Dashboard() {
   const { data, isLoading, error } = useDashboard();
 
@@ -32,7 +34,7 @@ export default function Dashboard() {
   const { data: poStats, isLoading: poLoading } = usePurchaseOrderStats();
   const { data: refundStats, isLoading: refundLoading } = useRefundStats();
   const { data: waybillStats, isLoading: waybillLoading } = useWaybillStats();
-  const { data: productsData, isLoading: productsLoading } = useProducts(undefined, 1); // ✅ fixed – removed 3rd argument
+  const { data: productsData, isLoading: productsLoading } = useProducts(undefined, 1);
 
   if (isLoading || poLoading || refundLoading || waybillLoading || productsLoading) {
     return <DashboardSkeleton />;
@@ -56,8 +58,8 @@ export default function Dashboard() {
 
   // Low stock products
   const lowStockProducts = (productsData?.data ?? [])
-    .filter((p) => p.currentStock <= p.reorderLevel)
-    .map((p) => ({
+    .filter((p: Product) => p.currentStock <= p.reorderLevel) // ✅ typed
+    .map((p: Product) => ({                                   // ✅ typed
       id: p.id,
       name: p.name,
       quantity: p.currentStock,
@@ -72,37 +74,37 @@ export default function Dashboard() {
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Revenue"
-          value={`₦${Number(data.cards.revenue).toLocaleString()}`}
+          value={`₦${Number(data?.cards?.revenue ?? 0).toLocaleString()}`}
           icon={<DollarSign />}
         />
         <StatCard
           title="Customers"
-          value={data.cards.customers}
+          value={data?.cards?.customers ?? 0}
           icon={<Users />}
         />
         <StatCard
           title="Products"
-          value={data.cards.products}
+          value={data?.cards?.products ?? 0}
           icon={<Package />}
         />
         <StatCard
           title="Sales Orders"
-          value={data.cards.salesOrders}
+          value={data?.cards?.salesOrders ?? 0}
           icon={<ShoppingCart />}
         />
         <StatCard
           title="Inventory Value"
-          value={`₦${Number(data.cards.inventoryValue).toLocaleString()}`}
+          value={`₦${Number(data?.cards?.inventoryValue ?? 0).toLocaleString()}`}
           icon={<Warehouse />}
         />
         <StatCard
           title="Payments Received"
-          value={`₦${Number(data.cards.paymentsReceived).toLocaleString()}`}
+          value={`₦${Number(data?.cards?.paymentsReceived ?? 0).toLocaleString()}`}
           icon={<CreditCard />}
         />
         <StatCard
           title="Waybills"
-          value={data.cards.waybills}
+          value={data?.cards?.waybills ?? 0}
           icon={<Truck />}
         />
         <StatCard
@@ -115,7 +117,7 @@ export default function Dashboard() {
       {/* CHART + ALERTS */}
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <RevenueCard data={data.revenueTrend} />
+          <RevenueCard data={data?.revenueTrend ?? []} />
         </div>
         <AlertsCard
           alerts={alerts}
@@ -125,9 +127,9 @@ export default function Dashboard() {
 
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <RecentOrders orders={data.recentOrders} />
+          <RecentOrders orders={data?.recentOrders ?? []} />
         </div>
-        <ActivityFeed activities={data.recentActivity} />
+        <ActivityFeed activities={data?.recentActivity ?? []} />
       </div>
 
       <div className="mt-6">

@@ -21,6 +21,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { formatCurrency } from '../utils/currency';
 import { getInventoryReport } from '../api/reports';
+import type { Warehouse } from '../api/warehouse';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#fb7185'];
 
@@ -74,7 +75,7 @@ export default function InventoryReport() {
               className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
             >
               <option value="">All</option>
-              {warehouses?.data?.map((w) => (
+              {warehouses?.data?.map((w: Warehouse) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
                 </option>
@@ -125,7 +126,6 @@ export default function InventoryReport() {
 function OverviewTab({ data }: any) {
   const { summary, productStockData } = data;
 
-  // Pie chart data: stock status
   const stockStatus = [
     { name: 'Out of Stock', value: summary.outOfStockCount },
     { name: 'Low Stock', value: summary.lowStockCount },
@@ -134,7 +134,6 @@ function OverviewTab({ data }: any) {
 
   return (
     <>
-      {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 text-slate-900">
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-500">Total Inventory Value</p>
@@ -170,14 +169,13 @@ function OverviewTab({ data }: any) {
         </div>
       </div>
 
-      {/* Stock Status Pie */}
       <div className="rounded-2xl border bg-white p-6 shadow-sm text-slate-900">
         <h3 className="text-sm font-semibold text-slate-500">Stock Status</h3>
         <div className="mt-4 h-64 flex justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={stockStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                {stockStatus.map((_entry, index) => (  // ✅ fixed: renamed to _entry
+                {stockStatus.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>

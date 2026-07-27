@@ -28,7 +28,6 @@ export default function SettingsForm() {
   const {
     register,
     handleSubmit,
-    reset,
   } = useForm<FormData>({
     values: {
       companyName: data?.companyName ?? "",

@@ -8,6 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useCreateWaybill } from '../hooks/useWaybills';
 import { useInvoices } from '../hooks/useInvoices';
 // import { useVehicles } from '../hooks/useVehicles';
+import type { Warehouse } from "../api/warehouse";
 // import { useDrivers } from '../hooks/useDrivers';
 import { useWarehouses } from '../hooks/useWarehouses';
 import Button from '../components/ui/Button';
@@ -89,7 +90,7 @@ export default function CreateWaybill() {
               className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
             >
               <option value="">Select warehouse</option>
-              {warehouses?.data?.map((w) => (
+              {warehouses?.data?.map((w: Warehouse) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
             </select>

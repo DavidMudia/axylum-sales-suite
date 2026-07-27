@@ -6,33 +6,28 @@ type Props = {
   children: ReactNode;
 };
 
-export default function DashboardLayout({
-  children,
-}: Props) {
+export default function DashboardLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
       />
 
       <div className="flex flex-1 flex-col">
-
         <Navbar
-          onMenuClick={() =>
-            setSidebarOpen(true)
-          }
+          onMenuClick={() => setSidebarOpen(true)}
         />
 
         <main className="flex-1 p-4 md:p-8">
           {children}
         </main>
-
       </div>
-
     </div>
   );
 }

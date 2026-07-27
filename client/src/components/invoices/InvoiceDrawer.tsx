@@ -10,6 +10,7 @@ import type { Invoice } from '../../api/invoice';
 import { useCustomers } from '../../hooks/useCustomers';
 import { useProducts } from '../../hooks/useProducts';
 import { formatCurrency } from '../../utils/currency';
+import type { Product } from '../../api/product'; // ✅ added
 
 const itemSchema = z.object({
   productId: z.number().int().positive(),
@@ -54,7 +55,7 @@ export default function InvoiceDrawer({
     control,
     reset,
     watch,
-    setValue, // ✅ added for auto‑fill
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(invoiceSchema),
@@ -114,8 +115,8 @@ export default function InvoiceDrawer({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden text-lg">
-      <div className="fixed inset-0 bg-black/40 text-lg" onClick={onClose} />
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 flex max-w-full">
         <div className="w-screen max-w-2xl">
           <div className="flex h-full flex-col bg-white shadow-xl">
@@ -132,10 +133,10 @@ export default function InvoiceDrawer({
               <div className="space-y-6">
                 {/* Customer */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Customer *</label>
+                  <label className="block text-sm font-medium text-slate-700">Customer *</label>
                   <select
                     {...register('customerId', { valueAsNumber: true })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-lg"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
                   >
                     <option value="">Select customer</option>
                     {customers?.data?.map((c) => (
@@ -147,60 +148,60 @@ export default function InvoiceDrawer({
 
                 {/* Due Date */}
                 <div>
-                  <label className="block  font-medium text-slate-700 text-lg">Due Date</label>
+                  <label className="block text-sm font-medium text-slate-700">Due Date</label>
                   <Input type="date" {...register('dueDate')} />
                 </div>
 
                 {/* Fees & Discounts */}
-                <div className="grid grid-cols-4 gap-4 text-lg">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Delivery Fee</label>
+                    <label className="block text-sm font-medium text-slate-700">Delivery Fee</label>
                     <Input type="number" step="0.01" {...register('deliveryFee', { valueAsNumber: true })} />
                   </div>
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Labour Fee</label>
+                    <label className="block text-sm font-medium text-slate-700">Labour Fee</label>
                     <Input type="number" step="0.01" {...register('labourFee', { valueAsNumber: true })} />
                   </div>
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Discount</label>
+                    <label className="block text-sm font-medium text-slate-700">Discount</label>
                     <Input type="number" step="0.01" {...register('discount', { valueAsNumber: true })} />
                   </div>
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Tax</label>
+                    <label className="block text-sm font-medium text-slate-700">Tax</label>
                     <Input type="number" step="0.01" {...register('tax', { valueAsNumber: true })} />
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Notes</label>
+                  <label className="block text-sm font-medium text-slate-700">Notes</label>
                   <textarea {...register('notes')} className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm" rows={3} />
                 </div>
 
                 {/* Items */}
                 <div>
-                  <div className="flex items-center justify-between text-lg">
-                    <h3 className="text-lg font-semibold text-slate-700">Items</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-slate-700">Items</h3>
                     <Button
                       type="button"
                       variant="secondary"
-                      className="inline-flex items-center gap-1 px-3 py-1 text-lg"
+                      className="inline-flex items-center gap-1 px-3 py-1 text-sm"
                       onClick={() => append({ productId: 0, quantity: 1, unitPrice: 0 })}
                     >
                       <Plus size={16} /> Add Item
                     </Button>
                   </div>
-                  <div className="mt-2 space-y-2 text-lg">
+                  <div className="mt-2 space-y-2">
                     {fields.map((field, index) => (
                       <div key={field.id} className="grid grid-cols-12 gap-2 items-end border-b pb-2">
                         <div className="col-span-5">
-                          <label className=" text-slate-500 text-lg">Product</label>
+                          <label className="text-xs text-slate-500">Product</label>
                           <select
                             {...register(`items.${index}.productId`, { valueAsNumber: true })}
-                            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-lg"
+                            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
                             onChange={(e) => {
                               const p = productsData?.data?.find(
-                                (x: any) => x.id === Number(e.target.value)
+                                (product: Product) => product.id === Number(e.target.value) // ✅ typed
                               );
                               if (p) {
                                 setValue(
@@ -211,32 +212,32 @@ export default function InvoiceDrawer({
                             }}
                           >
                             <option value="">Select</option>
-                            {productsData?.data?.map((p) => (
+                            {productsData?.data?.map((p: Product) => ( // ✅ typed
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Qty</label>
+                          <label className="text-xs text-slate-500">Qty</label>
                           <Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="mt-1" />
                         </div>
                         <div className="col-span-3">
-                          <label className="text-lg text-slate-500">Unit Price</label>
+                          <label className="text-xs text-slate-500">Unit Price</label>
                           <Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="mt-1" />
                         </div>
                         <div className="col-span-1">
-                          <button type="button" onClick={() => remove(index)} className="mt-3 text-red-500 hover:text-red-700 text-lg">
+                          <button type="button" onClick={() => remove(index)} className="mt-3 text-red-500 hover:text-red-700">
                             <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  {errors.items && <p className="mt-1 text-lg text-red-600">{errors.items.message}</p>}
+                  {errors.items && <p className="mt-1 text-sm text-red-600">{errors.items.message}</p>}
                 </div>
 
                 {/* Totals */}
-                <div className="rounded-lg bg-slate-50 p-4 space-y-1 text-lg">
+                <div className="rounded-lg bg-slate-50 p-4 space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>{formatCurrency(subtotal)}</span>

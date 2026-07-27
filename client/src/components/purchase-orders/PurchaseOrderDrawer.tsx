@@ -11,6 +11,8 @@ import { useSuppliers } from '../../hooks/useSuppliers';
 import { useWarehouses } from '../../hooks/useWarehouses';
 import { useProducts } from '../../hooks/useProducts';
 import { formatCurrency } from '../../utils/currency';
+import type { Warehouse } from '../../api/warehouse'; // ✅ added
+import type { Product } from '../../api/product'; // ✅ added
 
 // Zod schema – discount & tax are required (with default values provided in form)
 const itemSchema = z.object({
@@ -152,7 +154,7 @@ export default function PurchaseOrderDrawer({
                     className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
                   >
                     <option value="">Select warehouse</option>
-                    {warehousesData?.data?.map((w) => (
+                    {warehousesData?.data?.map((w: Warehouse) => ( // ✅ typed
                       <option key={w.id} value={w.id}>{w.name}</option>
                     ))}
                   </select>
@@ -198,7 +200,7 @@ export default function PurchaseOrderDrawer({
                             className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
                           >
                             <option value="">Select</option>
-                            {productsData?.data?.map((p) => (
+                            {productsData?.data?.map((p: Product) => ( // ✅ typed
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>

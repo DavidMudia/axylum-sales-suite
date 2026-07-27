@@ -28,7 +28,7 @@ export default function UserDropdown() {
             <div className="hidden md:block text-left">
 
                 <p className="font-semibold">
-                    {user?.name}
+                    {user?.firstName}
                 </p>
 
                 <p className="text-xs text-gray-500">

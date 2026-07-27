@@ -10,6 +10,7 @@ import type { Order } from '../../api/order';
 import { useCustomers } from '../../hooks/useCustomers';
 import { useProducts } from '../../hooks/useProducts';
 import { formatCurrency } from '../../utils/currency';
+import type { Product } from '../../api/product'; // ✅ added
 
 const itemSchema = z.object({
   productId: z.number().int().positive(),
@@ -56,7 +57,7 @@ export default function OrderDrawer({
     control,
     reset,
     watch,
-    setValue, // ✅ added for auto-fill
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(orderSchema),
@@ -132,7 +133,7 @@ export default function OrderDrawer({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden text-slate-900 text-lg">
+    <div className="fixed inset-0 z-50 overflow-hidden text-slate-900">
       <div className="fixed inset-0 bg-black/40" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 flex max-w-full">
         <div className="w-screen max-w-2xl">
@@ -150,63 +151,63 @@ export default function OrderDrawer({
               <div className="space-y-6">
                 {/* Customer */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Customer *</label>
+                  <label className="block text-sm font-medium text-slate-700">Customer *</label>
                   <select
                     {...register('customerId', { valueAsNumber: true })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-lg"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
                   >
                     <option value="">Select customer</option>
                     {customers?.data?.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
-                  {errors.customerId && <p className="mt-1 text-lg text-red-600">{errors.customerId.message}</p>}
+                  {errors.customerId && <p className="mt-1 text-sm text-red-600">{errors.customerId.message}</p>}
                 </div>
 
                 {/* Delivery Details */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Delivery Address</label>
+                  <label className="block text-sm font-medium text-slate-700">Delivery Address</label>
                   <Input {...register('deliveryAddress')} placeholder="Delivery address" />
                 </div>
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Delivery Instructions</label>
+                  <label className="block text-sm font-medium text-slate-700">Delivery Instructions</label>
                   <Input {...register('deliveryInstructions')} placeholder="Special instructions" />
                 </div>
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Expected Delivery Date</label>
+                  <label className="block text-sm font-medium text-slate-700">Expected Delivery Date</label>
                   <Input type="date" {...register('expectedDeliveryDate')} />
                 </div>
 
                 {/* Fees & Discount */}
-                <div className="grid grid-cols-3 gap-4 text-lg">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Delivery Fee</label>
+                    <label className="block text-sm font-medium text-slate-700">Delivery Fee</label>
                     <Input type="number" step="0.01" {...register('deliveryFee', { valueAsNumber: true })} />
                   </div>
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Labour Fee</label>
+                    <label className="block text-sm font-medium text-slate-700">Labour Fee</label>
                     <Input type="number" step="0.01" {...register('labourFee', { valueAsNumber: true })} />
                   </div>
                   <div>
-                    <label className="block text-lg font-medium text-slate-700">Discount</label>
+                    <label className="block text-sm font-medium text-slate-700">Discount</label>
                     <Input type="number" step="0.01" {...register('discount', { valueAsNumber: true })} />
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Notes</label>
+                  <label className="block text-sm font-medium text-slate-700">Notes</label>
                   <textarea {...register('notes')} className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm" rows={3} />
                 </div>
 
                 {/* Items */}
                 <div>
-                  <div className="flex items-center justify-between text-lg">
-                    <h3 className="text-lg font-semibold text-slate-700">Items</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-slate-700">Items</h3>
                     <Button
                       type="button"
                       variant="secondary"
-                      className="inline-flex items-center gap-1 px-3 py-1 text-lg"
+                      className="inline-flex items-center gap-1 px-3 py-1 text-sm"
                       onClick={() => append({ productId: 0, quantity: 1, unitPrice: 0, discount: 0 })}
                     >
                       <Plus size={16} /> Add Item
@@ -216,13 +217,13 @@ export default function OrderDrawer({
                     {fields.map((field, index) => (
                       <div key={field.id} className="grid grid-cols-12 gap-2 items-end border-b pb-2">
                         <div className="col-span-4">
-                          <label className="text-lg text-slate-500">Product</label>
+                          <label className="text-xs text-slate-500">Product</label>
                           <select
                             {...register(`items.${index}.productId`, { valueAsNumber: true })}
-                            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-lg"
+                            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
                             onChange={(e) => {
                               const p = productsData?.data?.find(
-                                (x: any) => x.id === Number(e.target.value)
+                                (product: Product) => product.id === Number(e.target.value) // ✅ typed
                               );
                               if (p) {
                                 setValue(
@@ -233,21 +234,21 @@ export default function OrderDrawer({
                             }}
                           >
                             <option value="">Select</option>
-                            {productsData?.data?.map((p) => (
+                            {productsData?.data?.map((p: Product) => ( // ✅ typed
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Qty</label>
+                          <label className="text-xs text-slate-500">Qty</label>
                           <Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="mt-1" />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Unit Price</label>
+                          <label className="text-xs text-slate-500">Unit Price</label>
                           <Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="mt-1" />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Discount</label>
+                          <label className="text-xs text-slate-500">Discount</label>
                           <Input type="number" step="0.01" {...register(`items.${index}.discount`, { valueAsNumber: true })} className="mt-1" placeholder="0" />
                         </div>
                         <div className="col-span-1">
@@ -258,11 +259,11 @@ export default function OrderDrawer({
                       </div>
                     ))}
                   </div>
-                  {errors.items && <p className="mt-1 text-lg text-red-600">{errors.items.message}</p>}
+                  {errors.items && <p className="mt-1 text-sm text-red-600">{errors.items.message}</p>}
                 </div>
 
                 {/* Totals */}
-                <div className="rounded-lg bg-slate-50 p-4 space-y-1 text-lg">
+                <div className="rounded-lg bg-slate-50 p-4 space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>{formatCurrency(subtotal)}</span>

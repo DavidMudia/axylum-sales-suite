@@ -21,6 +21,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { formatCurrency } from '../utils/currency';
 import { getFinancialReport } from '../api/reports';
+import type { Warehouse } from '../api/warehouse';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#fb7185', '#f97316', '#eab308', '#22d3ee'];
 
@@ -101,7 +102,7 @@ export default function FinancialReport() {
               className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
             >
               <option value="">All</option>
-              {warehouses?.data?.map((w) => (
+              {warehouses?.data?.map((w: Warehouse) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
                 </option>
@@ -154,7 +155,7 @@ export default function FinancialReport() {
   );
 }
 
-// ----- Tab Components (each receives `data` prop) -----
+// ----- Tab Components -----
 
 function KPIsTab({ data }: any) {
   const { kpis } = data;

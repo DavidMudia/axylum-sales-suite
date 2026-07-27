@@ -24,6 +24,9 @@ import { formatCurrency } from '../utils/currency';
 import { statusColor } from '../utils/statusColor';
 import { getSalesReport, exportSalesReport, saveReport, getSavedReports, loadSavedReport } from '../api/reports';
 import { Link } from 'react-router-dom';
+import type { Customer } from '../api/customer'; // ✅ added
+import type { Product } from '../api/product'; // ✅ added
+import type { Warehouse } from '../api/warehouse'; // ✅ added
 
 const COLORS = [
   '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
@@ -104,7 +107,6 @@ export default function SalesReport() {
   // Load saved report
   const handleLoadSaved = async (reportId: number) => {
     try {
-      // ✅ Removed unused 'data' variable
       await loadSavedReport(reportId);
       const savedReport = savedReports?.find((r: any) => r.id === reportId);
       if (savedReport?.filters) {
@@ -156,7 +158,7 @@ export default function SalesReport() {
               className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
             >
               <option value="">All</option>
-              {customers?.data?.map((c) => (
+              {customers?.data?.map((c: Customer) => ( // ✅ typed
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -171,7 +173,7 @@ export default function SalesReport() {
               className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
             >
               <option value="">All</option>
-              {products?.data?.map((p) => (
+              {products?.data?.map((p: Product) => ( // ✅ typed
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
@@ -186,7 +188,7 @@ export default function SalesReport() {
               className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
             >
               <option value="">All</option>
-              {warehouses?.data?.map((w) => (
+              {warehouses?.data?.map((w: Warehouse) => ( // ✅ typed
                 <option key={w.id} value={w.id}>
                   {w.name}
                 </option>

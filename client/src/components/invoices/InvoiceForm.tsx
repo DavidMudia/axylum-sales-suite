@@ -116,7 +116,7 @@ export default function InvoiceForm({
           Select Customer
         </option>
 
-        {customers?.map((c: any) => (
+        {customers?.data.map((c: any) => (
           <option key={c.id} value={c.id}>
             {c.name}
           </option>

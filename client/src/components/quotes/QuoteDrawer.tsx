@@ -10,6 +10,7 @@ import type { Quote } from '../../api/quote';
 import { useCustomers } from '../../hooks/useCustomers';
 import { useProducts } from '../../hooks/useProducts';
 import { formatCurrency } from '../../utils/currency';
+import type { Product } from '../../api/product'; // ✅ added
 
 const itemSchema = z.object({
   productId: z.number().int().positive(),
@@ -25,7 +26,6 @@ const quoteSchema = z.object({
   notes: z.string().optional(),
   items: z.array(itemSchema).min(1, 'At least one item is required.'),
 });
-
 type FormData = z.infer<typeof quoteSchema>;
 
 type Props = {
@@ -52,7 +52,7 @@ export default function QuoteDrawer({
     control,
     reset,
     watch,
-    setValue, // ✅ added for auto-fill
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(quoteSchema),
@@ -104,7 +104,7 @@ export default function QuoteDrawer({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden text-slate-900 text-lg">
+    <div className="fixed inset-0 z-50 overflow-hidden text-slate-900">
       <div className="fixed inset-0 bg-black/40" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 flex max-w-full">
         <div className="w-screen max-w-2xl">
@@ -113,44 +113,44 @@ export default function QuoteDrawer({
               <h2 className="text-lg font-semibold text-slate-900">
                 {initialData ? 'Edit Quote' : 'New Quote'}
               </h2>
-              <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 text-lg">
+              <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 text-lg">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6">
               <div className="space-y-6">
                 {/* Customer */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Customer *</label>
+                  <label className="block text-sm font-medium text-slate-700">Customer *</label>
                   <select
                     {...register('customerId', { valueAsNumber: true })}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-lg"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm"
                   >
                     <option value="">Select customer</option>
                     {customers?.data?.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
-                  {errors.customerId && <p className="mt-1 text-lg text-red-600">{errors.customerId.message}</p>}
+                  {errors.customerId && <p className="mt-1 text-sm text-red-600">{errors.customerId.message}</p>}
                 </div>
 
                 {/* Valid Until */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Valid Until</label>
+                  <label className="block text-sm font-medium text-slate-700">Valid Until</label>
                   <Input type="date" {...register('validUntil')} />
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-lg font-medium text-slate-700">Notes</label>
-                  <textarea {...register('notes')} className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-lg" rows={3} />
+                  <label className="block text-sm font-medium text-slate-700">Notes</label>
+                  <textarea {...register('notes')} className="mt-1 block w-full rounded-xl border border-slate-300 px-4 py-2 text-sm" rows={3} />
                 </div>
 
                 {/* Items */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-700">Items</h3>
+                    <h3 className="text-sm font-semibold text-slate-700">Items</h3>
                     <Button
                       type="button"
                       variant="secondary"
@@ -162,15 +162,15 @@ export default function QuoteDrawer({
                   </div>
                   <div className="mt-2 space-y-2">
                     {fields.map((field, index) => (
-                      <div key={field.id} className="grid grid-cols-12 gap-2 items-end border-b pb-2 text-lg">
+                      <div key={field.id} className="grid grid-cols-12 gap-2 items-end border-b pb-2">
                         <div className="col-span-4">
-                          <label className="text-lg text-slate-500">Product</label>
+                          <label className="text-xs text-slate-500">Product</label>
                           <select
                             {...register(`items.${index}.productId`, { valueAsNumber: true })}
-                            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-lg"
+                            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
                             onChange={(e) => {
                               const p = productsData?.data?.find(
-                                (x: any) => x.id === Number(e.target.value)
+                                (product: Product) => product.id === Number(e.target.value) // ✅ typed
                               );
                               if (p) {
                                 setValue(
@@ -181,37 +181,37 @@ export default function QuoteDrawer({
                             }}
                           >
                             <option value="">Select</option>
-                            {productsData?.data?.map((p) => (
+                            {productsData?.data?.map((p: Product) => ( // ✅ typed
                               <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                           </select>
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Qty</label>
+                          <label className="text-xs text-slate-500">Qty</label>
                           <Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="mt-1" />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Unit Price</label>
+                          <label className="text-xs text-slate-500">Unit Price</label>
                           <Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="mt-1" />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-lg text-slate-500">Discount</label>
+                          <label className="text-xs text-slate-500">Discount</label>
                           <Input type="number" step="0.01" {...register(`items.${index}.discount`, { valueAsNumber: true })} className="mt-1" placeholder="0" />
                         </div>
                         <div className="col-span-1">
-                          <button type="button" onClick={() => remove(index)} className="mt-3 text-red-500 hover:text-red-700 text-lg">
+                          <button type="button" onClick={() => remove(index)} className="mt-3 text-red-500 hover:text-red-700">
                             <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  {errors.items && <p className="mt-1 text-lg text-red-600">{errors.items.message}</p>}
+                  {errors.items && <p className="mt-1 text-sm text-red-600">{errors.items.message}</p>}
                 </div>
 
                 {/* Totals */}
                 <div className="rounded-lg bg-slate-50 p-4 text-slate-900">
-                  <div className="flex justify-between text-lg">
+                  <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
                     <span>{formatCurrency(totals.subtotal)}</span>
                   </div>
@@ -222,7 +222,7 @@ export default function QuoteDrawer({
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-end gap-3 border-t border-slate-200 pt-6 text-lg">
+              <div className="mt-8 flex justify-end gap-3 border-t border-slate-200 pt-6">
                 <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
                   Cancel
                 </Button>

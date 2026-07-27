@@ -7,7 +7,6 @@ CREATE TABLE "Product" (
     "name" TEXT NOT NULL,
     "sku" TEXT NOT NULL,
     "description" TEXT,
-    "category" TEXT,
     "unitPrice" DOUBLE PRECISION NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 0,
     "status" "ProductStatus" NOT NULL DEFAULT 'IN_STOCK',

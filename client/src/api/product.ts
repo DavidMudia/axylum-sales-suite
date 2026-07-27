@@ -1,69 +1,56 @@
+// src/api/product.ts
 import api from "./axios";
 
-export async function getProducts(
-  search = "",
-  page = 1
-) {
-  const { data } = await api.get(
-    "/products",
-    {
-      params: {
-        search,
-        page,
-      },
-    }
-  );
+// ============================================================
+// Types
+// ============================================================
 
-  return data;
+export interface Product {
+  id: number;
+  name: string;
+  sku?: string | null;
+  barcode?: string | null;
+  unit: string;
+  costPrice: number;
+  sellingPrice: number;
+  currentStock: number;
+  minimumStock: number;
+  reorderLevel: number;
+  description?: string | null;
+  imageUrl?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export async function getProduct(
-  id: number
-) {
-  const { data } = await api.get(
-    `/products/${id}`
-  );
-
-  return data;
+export interface ProductsResponse {
+  data: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
-export async function createProduct(
-  data: any
-) {
-  return (
-    await api.post(
-      "/products",
-      data
-    )
-  ).data;
-}
+// ============================================================
+// API functions
+// ============================================================
 
-export async function updateProduct(
-  id: number,
-  data: any
-) {
-  return (
-    await api.patch(
-      `/products/${id}`,
-      data
-    )
-  ).data;
-}
+export const getProducts = (search = "", page = 1) =>
+  api.get(`/products?search=${search}&page=${page}`).then(r => r.data);
 
-export async function deleteProduct(
-  id: number
-) {
-  return (
-    await api.delete(
-      `/products/${id}`
-    )
-  ).data;
-}
+export const getProduct = (id: number) =>
+  api.get(`/products/${id}`).then(r => r.data);
 
-export async function getProductStats() {
-  return (
-    await api.get(
-      "/products/stats"
-    )
-  ).data;
-}
+export const createProduct = (data: any) =>
+  api.post("/products", data).then(r => r.data);
+
+export const updateProduct = (id: number, data: any) =>
+  api.patch(`/products/${id}`, data).then(r => r.data);
+
+export const deleteProduct = (id: number) =>
+  api.delete(`/products/${id}`);
+
+export const getProductStats = () =>
+  api.get("/products/stats").then(r => r.data);

@@ -10,76 +10,170 @@ import {
   LoginInput,
 } from "./auth.schema";
 
-export async function registerUser(data: RegisterInput) {
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      email: data.email,
-    },
-  });
+export async function registerUser(
+  data: RegisterInput
+) {
+  const existing =
+    await prisma.user.findUnique({
+      where: {
+        email: data.email,
+      },
+    });
 
-  if (existingUser) {
-    throw new AppError("Email already exists", 409);
+  if (existing) {
+    throw new AppError(
+      "Email already exists.",
+      409
+    );
   }
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const hashedPassword =
+    await bcrypt.hash(
+      data.password,
+      10
+    );
 
-  const user = await prisma.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-    },
-  });
+  const user =
+    await prisma.user.create({
+      data: {
+        firstName:
+          data.firstName,
 
-  return user;
+        lastName:
+          data.lastName,
+
+        employeeNumber:
+          data.employeeNumber,
+
+        email:
+          data.email,
+
+        password:
+          hashedPassword,
+
+        role: {
+          connect: {
+            id: data.roleId,
+          },
+        },
+      },
+
+      include: {
+        role: true,
+      },
+    });
+
+  return {
+    id: user.id,
+
+    employeeNumber:
+      user.employeeNumber,
+
+    firstName:
+      user.firstName,
+
+    lastName:
+      user.lastName,
+
+    email:
+      user.email,
+
+    role:
+      user.role.name,
+  };
 }
+export async function loginUser(
+  data: LoginInput
+) {
+  const user =
+    await prisma.user.findUnique({
+      where: {
+        email: data.email,
+      },
 
-export async function loginUser(data: LoginInput) {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: data.email,
-    },
-  });
+      include: {
+        role: {
+          include: {
+            rolePermissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-  // Never reveal whether the email or password was incorrect
   if (!user) {
-    throw new AppError("Invalid email or password", 401);
+    throw new AppError(
+      "Invalid email or password",
+      401
+    );
   }
 
-  const passwordMatches = await bcrypt.compare(
-    data.password,
-    user.password
-  );
+  const passwordMatches =
+    await bcrypt.compare(
+      data.password,
+      user.password
+    );
 
   if (!passwordMatches) {
-    throw new AppError("Invalid email or password", 401);
+    throw new AppError(
+      "Invalid email or password",
+      401
+    );
+  }
+
+  if (!user.isActive) {
+    throw new AppError(
+      "This account has been disabled.",
+      403
+    );
   }
 
   const signOptions: SignOptions = {
-    expiresIn: env.JWT_EXPIRES_IN as SignOptions["expiresIn"],
+    expiresIn:
+      env.JWT_EXPIRES_IN as SignOptions["expiresIn"],
   };
 
   const token = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-    },
-    env.JWT_SECRET,
-    signOptions
-  );
+
+{
+
+id: user.id,
+
+email: user.email,
+
+roleId: user.roleId
+
+},
+
+env.JWT_SECRET,
+
+signOptions
+
+);
 
   return {
     token,
+
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    },
+  id: user.id,
+
+  employeeNumber: user.employeeNumber,
+
+  firstName: user.firstName,
+
+  lastName: user.lastName,
+
+  email: user.email,
+
+  role: user.role.name,
+
+  permissions:
+    user.role.rolePermissions.map(
+      (rp) => rp.permission.name
+    ),
+},
   };
 }

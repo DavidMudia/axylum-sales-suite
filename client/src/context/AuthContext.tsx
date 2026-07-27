@@ -5,73 +5,150 @@ import {
 } from "react";
 
 import type { ReactNode } from "react";
-type User = {
+
+export type User = {
   id: number;
+  employeeNumber: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  name?: string;
+
+  role: string;
+
+  permissions: string[];
 };
 
 type AuthContextType = {
   user: User | null;
-  token: string | null;
+
+  token: string |null;
+
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+
+  login: (
+    token: string,
+    user: User
+  ) => void;
+
   logout: () => void;
+
+  hasPermission: (
+    permission: string
+  ) => boolean;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext =
+createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export function AuthProvider({
   children,
-}: {
+}:{
   children: ReactNode;
 }) {
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
-  );
 
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [token,setToken] =
+    useState<string | null>(
+      localStorage.getItem("token")
+    );
 
-  const login = (token: string, user: User) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+  const [user,setUser] =
+    useState<User | null>(() => {
+
+      const saved =
+        localStorage.getItem("user");
+
+      return saved
+        ? JSON.parse(saved)
+        : null;
+
+    });
+
+  function login(
+    token:string,
+    user:User
+  ){
+
+    localStorage.setItem(
+      "token",
+      token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
 
     setToken(token);
-    setUser(user);
-  };
 
-  const logout = () => {
+    setUser(user);
+
+  }
+
+  function logout(){
+
     localStorage.removeItem("token");
+
     localStorage.removeItem("user");
 
     setToken(null);
-    setUser(null);
-  };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated: !!token,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+    setUser(null);
+
+  }
+
+  function hasPermission(permission: string) {
+  if (!user) return false;
+
+  if (user.role === "SUPER_ADMIN") {
+    return true;
+  }
+
+  return user.permissions.includes(permission);
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+  return (
 
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
+    <AuthContext.Provider
+      value={{
+
+        user,
+
+        token,
+
+        isAuthenticated: !!token,
+
+        login,
+
+        logout,
+
+        hasPermission,
+
+      }}
+    >
+
+      {children}
+
+    </AuthContext.Provider>
+
+  );
+
+}
+
+export function useAuth(){
+
+  const context =
+    useContext(AuthContext);
+
+  if(!context){
+
+    throw new Error(
+      "useAuth must be used inside AuthProvider."
+    );
+
   }
 
   return context;
+
 }

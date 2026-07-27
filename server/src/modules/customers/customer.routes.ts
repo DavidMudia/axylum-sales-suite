@@ -1,57 +1,110 @@
 import { Router } from "express";
 
-import {
-  create,
-  getAll,
-  getOne,
-  update,
-  remove,
-  stats,
-} from "./customer.controller";
+import * as controller from "./customer.controller";
 
 import { authenticate } from "../../middleware/auth.middleware";
-import { validate } from "../../middleware/validate";
+import { requirePermission } from "../../middleware/authorize.middleware";
+import { validate } from "../../middleware/validate.middleware";
 import { asyncHandler } from "../../utils/asyncHandler";
 
-import { createCustomerSchema } from "./customer.schema";
+import {
+  createCustomerSchema,
+  updateCustomerSchema,
+} from "./customer.schema";
 
 const router = Router();
+
+/*
+|--------------------------------------------------------------------------
+| Statistics
+|--------------------------------------------------------------------------
+*/
 
 router.get(
   "/stats",
   authenticate,
-  asyncHandler(stats)
+  requirePermission("customer.read"),
+  asyncHandler(controller.stats)
 );
 
-router.get(
-  "/",
-  authenticate,
-  asyncHandler(getAll)
-);
-
-router.get(
-  "/:id",
-  authenticate,
-  asyncHandler(getOne)
-);
+/*
+|--------------------------------------------------------------------------
+| Create Customer
+|--------------------------------------------------------------------------
+*/
 
 router.post(
   "/",
   authenticate,
+  requirePermission("customer.create"),
   validate(createCustomerSchema),
-  asyncHandler(create)
+  asyncHandler(controller.create)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Get All Customers
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+  "/",
+  authenticate,
+  requirePermission("customer.read"),
+  asyncHandler(controller.getAll)
+);
+
+/*
+|--------------------------------------------------------------------------
+| Get Single Customer
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+  "/:id",
+  authenticate,
+  requirePermission("customer.read"),
+  asyncHandler(controller.getOne)
+);
+
+/*
+|--------------------------------------------------------------------------
+| Update Customer
+|--------------------------------------------------------------------------
+*/
 
 router.patch(
   "/:id",
   authenticate,
-  asyncHandler(update)
+  requirePermission("customer.update"),
+  validate(updateCustomerSchema),
+  asyncHandler(controller.update)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Restore Customer
+|--------------------------------------------------------------------------
+*/
+
+router.patch(
+  "/:id/restore",
+  authenticate,
+  requirePermission("customer.update"),
+  asyncHandler(controller.restore)
+);
+
+/*
+|--------------------------------------------------------------------------
+| Delete Customer
+|--------------------------------------------------------------------------
+*/
 
 router.delete(
   "/:id",
   authenticate,
-  asyncHandler(remove)
+  requirePermission("customer.delete"),
+  asyncHandler(controller.remove)
 );
 
 export default router;

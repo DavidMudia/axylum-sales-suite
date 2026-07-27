@@ -1,12 +1,12 @@
-import { Response } from "express";
-import { AuthRequest } from "../../middleware/auth.middleware";
+import { Response, Request } from "express";
+
 
 import {
   registerUser,
   loginUser,
 } from "./auth.service";
 
-export async function register(req: AuthRequest, res: Response) {
+export async function register(req: Request, res: Response) {
   const user = await registerUser(req.body);
 
   return res.status(201).json({
@@ -15,7 +15,7 @@ export async function register(req: AuthRequest, res: Response) {
   });
 }
 
-export async function login(req: AuthRequest, res: Response) {
+export async function login(req: Request, res: Response) {
   const result = await loginUser(req.body);
 
   return res.status(200).json({
@@ -24,7 +24,7 @@ export async function login(req: AuthRequest, res: Response) {
   });
 }
 
-export async function me(req: AuthRequest, res: Response) {
+export async function me(req: Request, res: Response) {
   return res.status(200).json({
     message: "Authenticated",
     user: req.user,

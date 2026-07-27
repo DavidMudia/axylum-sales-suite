@@ -1,99 +1,265 @@
 import {
-  LayoutDashboard,
-  Users,
-  Package,
-  FileText,
-  Receipt,
-  BarChart3,
-  Settings,
+  ChevronLeft,
+  ChevronRight,
   X,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import { navigation } from "./navigation";
+import SidebarSection from "./SidebarSection";
 
-const links = [
-  { icon: LayoutDashboard, label: "Dashboard", to: "/" },
-  { icon: Users, label: "Customers", to: "/customers" },
-  { icon: Package, label: "Products", to: "/products" },
-  { icon: FileText, label: "Quotes", to: "/quotes" },
-  { icon: Receipt, label: "Invoices", to: "/invoices" },
-  { icon: BarChart3, label: "Reports", to: "/reports" },
-  { icon: Settings, label: "Settings", to: "/settings" },
-];
 
 type Props = {
   open: boolean;
+
+  collapsed: boolean;
+
+  setCollapsed: (
+    value: boolean
+  ) => void;
+
   onClose: () => void;
 };
 
+
 export default function Sidebar({
   open,
+  collapsed,
+  setCollapsed,
   onClose,
 }: Props) {
+
+
   return (
     <>
+
       {open && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          className="
+            fixed
+            inset-0
+            z-40
+            bg-black/40
+            lg:hidden
+          "
         />
       )}
 
+
+
       <aside
         className={`
-fixed top-0 left-0 z-50
-h-screen w-64 bg-zinc-900 text-white p-6
-transition-transform duration-300
+          fixed
+          inset-y-0
+          left-0
+          z-50
+          flex
+          flex-col
+          bg-slate-950
+          border-r
+          border-slate-800
+          transition-all
+          duration-300
 
-${open ? "translate-x-0" : "-translate-x-full"}
+          ${
+            collapsed
+              ? "w-20"
+              : "w-72"
+          }
 
-md:translate-x-0
-md:static
-md:z-auto
-`}
+          ${
+            open
+              ? "translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
+          }
+        `}
       >
-        <div className="mb-10 flex items-center justify-between">
 
-          <h1 className="text-2xl font-bold">
-            Axylum
-          </h1>
+
+        {/* Logo */}
+
+        <div
+          className="
+            flex
+            h-16
+            items-center
+            justify-between
+            border-b
+            border-slate-800
+            px-5
+          "
+        >
+
+
+          {!collapsed && (
+
+            <div>
+
+              <h1
+                className="
+                  text-lg
+                  font-bold
+                  tracking-[0.25em]
+                  text-white
+                "
+              >
+                AXYLUM
+              </h1>
+
+
+              <p
+                className="
+                  text-xs
+                  text-slate-400
+                "
+              >
+                Sales Suite ERP
+              </p>
+
+            </div>
+
+          )}
+
+
+
+          <button
+            onClick={() =>
+              setCollapsed(!collapsed)
+            }
+            className="
+              hidden
+              rounded-lg
+              p-2
+              text-slate-400
+              hover:bg-slate-800
+              hover:text-white
+              lg:block
+            "
+          >
+
+            {
+              collapsed
+                ? (
+                    <ChevronRight
+                      size={18}
+                    />
+                  )
+                : (
+                    <ChevronLeft
+                      size={18}
+                    />
+                  )
+            }
+
+          </button>
+
+
 
           <button
             onClick={onClose}
-            className="md:hidden"
+            className="
+              rounded-lg
+              p-2
+              text-slate-400
+              hover:bg-slate-800
+              lg:hidden
+            "
           >
-            <X />
+
+            <X size={18}/>
+
           </button>
+
 
         </div>
 
-        <nav className="space-y-2">
 
-          {links.map((item) => (
 
-            <NavLink
-              key={item.label}
-              to={item.to}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-4 py-3 transition ${
-                  isActive
-                    ? "bg-blue-600"
-                    : "hover:bg-zinc-800"
-                }`
-              }
+
+        {/* Navigation */}
+
+        <div
+          className="
+            flex-1
+            overflow-y-auto
+            px-3
+            py-5
+          "
+        >
+
+          {
+            navigation.map(
+              (section) => (
+
+                <SidebarSection
+
+                  key={
+                    section.title
+                  }
+
+                  title={
+                    section.title
+                  }
+
+                  items={
+                    section.children ?? []
+                  }
+
+                  collapsed={
+                    collapsed
+                  }
+
+                />
+
+              )
+            )
+          }
+
+
+        </div>
+
+
+
+
+
+        {!collapsed && (
+
+          <div
+            className="
+              border-t
+              border-slate-800
+              p-4
+            "
+          >
+
+            <p
+              className="
+                text-xs
+                text-slate-500
+              "
             >
-              <item.icon size={20} />
+              Axylum ERP
+            </p>
 
-              {item.label}
 
-            </NavLink>
+            <p
+              className="
+                text-xs
+                text-slate-600
+              "
+            >
+              Version 1.0.0
+            </p>
 
-          ))}
 
-        </nav>
+          </div>
+
+        )}
+
 
       </aside>
+
+
     </>
   );
 }

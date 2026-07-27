@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./modules/auth/auth.routes";
-
+import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 const app = express();
 
 console.log("1");
@@ -40,4 +40,8 @@ app.get("/", (req, res) => {
 
 console.log("7");
 
+app.use(
+  "/api/dashboard",
+  dashboardRoutes
+);
 export default app;

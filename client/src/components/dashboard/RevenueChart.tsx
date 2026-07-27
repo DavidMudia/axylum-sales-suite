@@ -1,25 +1,48 @@
-export default function RevenueChart() {
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+} from "recharts";
+
+type Props = {
+  data: {
+    month: string;
+    revenue: number;
+  }[];
+};
+
+export default function RevenueChart({
+  data,
+}: Props) {
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm">
+    <ResponsiveContainer
+      width="100%"
+      height={300}
+    >
+      <AreaChart data={data}>
 
-      <div className="mb-6 flex items-center justify-between">
+        <CartesianGrid strokeDasharray="3 3" />
 
-        <h2 className="text-xl font-semibold">
-          Revenue Overview
-        </h2>
+        <XAxis dataKey="month" />
 
-        <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
-          Live
-        </span>
+        <Tooltip
+          formatter={(value) =>
+            `₦${Number(value).toLocaleString()}`
+          }
+        />
 
-      </div>
+        <Area
+          type="monotone"
+          dataKey="revenue"
+          stroke="#2563eb"
+          fill="#3b82f6"
+          fillOpacity={0.15}
+        />
 
-      <div className="flex h-[300px] md:h-[420px] items-center justify-center rounded-xl border-2 border-dashed border-gray-200 text-gray-400">
-
-        Revenue chart coming soon...
-
-      </div>
-
-    </div>
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }

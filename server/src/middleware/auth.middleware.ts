@@ -4,17 +4,14 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { AppError } from "../utils/AppError";
 
-interface JwtPayload {
+interface UserPayload {
   id: number;
   email: string;
-}
-
-export interface AuthRequest extends Request {
-  user?: JwtPayload;
+  roleId: number;
 }
 
 export function authenticate(
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -32,9 +29,9 @@ export function authenticate(
 
   try {
     const decoded = jwt.verify(
-      token,
-      env.JWT_SECRET
-    ) as JwtPayload;
+  token,
+  env.JWT_SECRET
+) as UserPayload;
 
     req.user = decoded;
 

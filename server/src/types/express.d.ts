@@ -1,15 +1,12 @@
-import "express";
+import "express-serve-static-core";
 
-declare global {
-  namespace Express {
-    interface UserPayload {
+declare module "express-serve-static-core" {
+  interface Request {
+    user: {
       id: number;
       email: string;
-    }
-
-    interface Request {
-      user?: UserPayload;
-    }
+      roleId: number;
+    };
   }
 }
 

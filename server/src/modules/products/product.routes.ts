@@ -1,59 +1,113 @@
 import { Router } from "express";
 
-import {
-  create,
-  getAll,
-  getOne,
-  update,
-  remove,
-  stats,
-} from "./product.controller";
+import * as controller from "./product.controller";
 
 import { authenticate } from "../../middleware/auth.middleware";
-import { validate } from "../../middleware/validate";
-import { asyncHandler } from "../../utils/asyncHandler";
+import { requirePermission } from "../../middleware/authorize.middleware";
+import { validate } from "../../middleware/validate.middleware";
 
 import {
   createProductSchema,
+  updateProductSchema,
+  queryProductSchema,
 } from "./product.schema";
+
+import { asyncHandler } from "../../utils/asyncHandler";
 
 const router = Router();
 
+/*
+|--------------------------------------------------------------------------
+| Low Stock
+|--------------------------------------------------------------------------
+*/
+
 router.get(
-  "/stats",
+  "/low-stock",
   authenticate,
-  asyncHandler(stats)
+  requirePermission("inventory.read"),
+  asyncHandler(controller.lowStock)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Get Products
+|--------------------------------------------------------------------------
+*/
 
 router.get(
   "/",
   authenticate,
-  asyncHandler(getAll)
+  requirePermission("inventory.read"),
+  validate(queryProductSchema, 'query'), // ✅ added 'query'
+  asyncHandler(controller.getAll)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Get Product
+|--------------------------------------------------------------------------
+*/
 
 router.get(
   "/:id",
   authenticate,
-  asyncHandler(getOne)
+  requirePermission("inventory.read"),
+  asyncHandler(controller.getOne)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Create Product
+|--------------------------------------------------------------------------
+*/
 
 router.post(
   "/",
   authenticate,
+  requirePermission("inventory.create"),
   validate(createProductSchema),
-  asyncHandler(create)
+  asyncHandler(controller.create)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Update Product
+|--------------------------------------------------------------------------
+*/
 
 router.patch(
   "/:id",
   authenticate,
-  asyncHandler(update)
+  requirePermission("inventory.update"),
+  validate(updateProductSchema),
+  asyncHandler(controller.update)
 );
+
+/*
+|--------------------------------------------------------------------------
+| Delete Product
+|--------------------------------------------------------------------------
+*/
 
 router.delete(
   "/:id",
   authenticate,
-  asyncHandler(remove)
+  requirePermission("inventory.delete"),
+  asyncHandler(controller.remove)
+);
+
+/*
+|--------------------------------------------------------------------------
+| Restore Product
+|--------------------------------------------------------------------------
+*/
+
+router.patch(
+  "/:id/restore",
+  authenticate,
+  requirePermission("inventory.update"),
+  asyncHandler(controller.restore)
 );
 
 export default router;

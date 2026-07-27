@@ -1,68 +1,154 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../../middleware/auth.middleware";
 
-import {
-  create as createCustomer,
-  getAll as getCustomers,
-  getCustomerById,
-  updateCustomer,
-  softDeleteCustomer,
-  getCustomerStats,
-} from "./customer.service";
+import * as service from "./customer.service";
 
-export async function create(req: AuthRequest, res: Response) {
-  const customer = await createCustomer(
-    req.body,
-    req.user!.id
-  );
+/*
+|--------------------------------------------------------------------------
+| Statistics
+|--------------------------------------------------------------------------
+*/
 
-  return res.status(201).json({
-    message: "Customer created successfully",
-    customer,
-  });
+export async function stats(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const statistics =
+    await service.stats();
+
+  res.json(statistics);
 }
 
-export async function getAll(req: Request, res: Response) {
-  const search = req.query.search as string | undefined;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
+/*
+|--------------------------------------------------------------------------
+| Create Customer
+|--------------------------------------------------------------------------
+*/
 
-  const customers = await getCustomers(search, page, limit);
+export async function create(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const customer =
+    await service.create({
+      ...req.body,
 
-  return res.status(200).json(customers);
-}
-
-export async function getOne(req: Request, res: Response) {
-  const customer = await getCustomerById(Number(req.params.id));
-
-  if (!customer) {
-    return res.status(404).json({
-      message: "Customer not found",
+      createdBy: {
+        connect: {
+          id: req.user!.id,
+        },
+      },
     });
-  }
 
-  return res.json(customer);
+  res.status(201).json(customer);
 }
 
-export async function update(req: Request, res: Response) {
-  const customer = await updateCustomer(
-    Number(req.params.id),
-    req.body
+/*
+|--------------------------------------------------------------------------
+| Get All Customers
+|--------------------------------------------------------------------------
+*/
+
+export async function getAll(
+  req: Request,
+  res: Response
+): Promise<void> {
+
+  const search =
+    req.query.search as string | undefined;
+
+  const page =
+    Number(req.query.page) || 1;
+
+  const limit =
+    Number(req.query.limit) || 20;
+
+  const customers =
+    await service.getAll(
+      search,
+      page,
+      limit
+    );
+
+  res.json(customers);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Get Single Customer
+|--------------------------------------------------------------------------
+*/
+
+export async function getOne(
+  req: Request,
+  res: Response
+): Promise<void> {
+
+  const customer =
+    await service.getOne(
+      Number(req.params.id)
+    );
+
+  res.json(customer);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Update Customer
+|--------------------------------------------------------------------------
+*/
+
+export async function update(
+  req: Request,
+  res: Response
+): Promise<void> {
+
+  const customer =
+    await service.update(
+      Number(req.params.id),
+      req.body
+    );
+
+  res.json(customer);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Delete Customer
+|--------------------------------------------------------------------------
+*/
+
+export async function remove(
+  req: Request,
+  res: Response
+): Promise<void> {
+
+  await service.remove(
+    Number(req.params.id)
   );
 
-  return res.json(customer);
-}
-
-export async function remove(req: Request, res: Response) {
-  await softDeleteCustomer(Number(req.params.id));
-
-  return res.json({
-    message: "Customer deleted",
+  res.json({
+    message:
+      "Customer deleted successfully.",
   });
+
 }
 
-export async function stats(req: Request, res: Response) {
-  const data = await getCustomerStats();
+/*
+|--------------------------------------------------------------------------
+| Restore Customer
+|--------------------------------------------------------------------------
+*/
 
-  return res.json(data);
+export async function restore(
+  req: Request,
+  res: Response
+): Promise<void> {
+
+  const customer =
+    await service.restore(
+      Number(req.params.id)
+    );
+
+  res.json(customer);
+
 }

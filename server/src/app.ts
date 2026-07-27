@@ -1,47 +1,44 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+
 import authRoutes from "./modules/auth/auth.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
+
 const app = express();
-
-console.log("1");
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
-console.log("2");
 
 app.use(helmet());
 
-console.log("3");
+const allowedOrigins = [
+  "http://localhost:5173",
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));
+  process.env.CLIENT_URL,
+].filter(Boolean);
 
-console.log("4");
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow Postman/mobile apps/no Origin header
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
-console.log("5");
-
-app.use("/api/auth", authRoutes);
-
-console.log("6");
-
-app.get("/", (req, res) => {
-  console.log("Root route hit");
+app.get("/", (_, res) => {
   res.send("Authentication API Running 🚀");
 });
 
-console.log("7");
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
-app.use(
-  "/api/dashboard",
-  dashboardRoutes
-);
 export default app;

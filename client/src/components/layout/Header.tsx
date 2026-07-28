@@ -55,7 +55,7 @@ export default function Header({ onMenuClick }: Props) {
         </button>
         <div>
           <h1 className="text-lg font-bold text-slate-900">
-            FAVOUR STEEL INTEGRATED SERVICES
+            TYTAN
           </h1>
         </div>
       </div>

@@ -10,6 +10,7 @@ import Roles from '../pages/Roles';
 import Settings from '../pages/Settings';
 import InvoiceDetails from '../pages/InvoiceDetails';
 import ProductDetails from "../pages/ProductDetails";
+import Register from "../pages/Register";
 
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
@@ -93,7 +94,10 @@ export default function AppRoutes() {
 
         {/* Users */}
         <Route path="/users" element={<ProtectedRoute permission={PERMISSIONS.USER.READ}><Users /></ProtectedRoute>} />
-
+<Route
+  path="/register"
+  element={<Register />}
+/>
         {/* Refunds */}
         <Route path="/refunds" element={<ProtectedRoute permission={PERMISSIONS.REFUND.READ}><Refunds /></ProtectedRoute>} />
         <Route path="/refunds/:id" element={<ProtectedRoute permission={PERMISSIONS.REFUND.READ}><RefundDetails /></ProtectedRoute>} />

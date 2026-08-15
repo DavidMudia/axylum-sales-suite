@@ -12,16 +12,14 @@ export type User = {
   firstName: string;
   lastName: string;
   email: string;
-
   role: string;
-
   permissions: string[];
 };
 
 type AuthContextType = {
   user: User | null;
 
-  token: string |null;
+  token: string | null;
 
   isAuthenticated: boolean;
 
@@ -38,37 +36,77 @@ type AuthContextType = {
 };
 
 const AuthContext =
-createContext<AuthContextType | undefined>(
-  undefined
-);
+  createContext<AuthContextType | undefined>(
+    undefined
+  );
+
+function normalizeUser(user: Partial<User>): User {
+  return {
+    id: user.id ?? 0,
+
+    employeeNumber:
+      user.employeeNumber ?? "",
+
+    firstName:
+      user.firstName ?? "",
+
+    lastName:
+      user.lastName ?? "",
+
+    email:
+      user.email ?? "",
+
+    role:
+      user.role ?? "",
+
+    permissions:
+      Array.isArray(user.permissions)
+        ? user.permissions
+        : [],
+  };
+}
 
 export function AuthProvider({
   children,
-}:{
+}: {
   children: ReactNode;
 }) {
-
-  const [token,setToken] =
+  const [token, setToken] =
     useState<string | null>(
       localStorage.getItem("token")
     );
 
-  const [user,setUser] =
+  const [user, setUser] =
     useState<User | null>(() => {
-
       const saved =
         localStorage.getItem("user");
 
-      return saved
-        ? JSON.parse(saved)
-        : null;
+      if (!saved) {
+        return null;
+      }
 
+      try {
+        const parsed = JSON.parse(saved);
+
+        return normalizeUser(parsed);
+      } catch (error) {
+        console.error(
+          "Failed to parse saved user:",
+          error
+        );
+
+        localStorage.removeItem("user");
+
+        return null;
+      }
     });
 
   function login(
-    token:string,
-    user:User
-  ){
+    token: string,
+    user: User
+  ) {
+    const normalizedUser =
+      normalizeUser(user);
 
     localStorage.setItem(
       "token",
@@ -77,17 +115,15 @@ export function AuthProvider({
 
     localStorage.setItem(
       "user",
-      JSON.stringify(user)
+      JSON.stringify(normalizedUser)
     );
 
     setToken(token);
 
-    setUser(user);
-
+    setUser(normalizedUser);
   }
 
-  function logout(){
-
+  function logout() {
     localStorage.removeItem("token");
 
     localStorage.removeItem("user");
@@ -95,24 +131,34 @@ export function AuthProvider({
     setToken(null);
 
     setUser(null);
-
   }
 
-  function hasPermission(permission: string) {
-  if (!user) return false;
+  function hasPermission(
+    permission: string
+  ): boolean {
+    if (!user) {
+      return false;
+    }
 
-  if (user.role === "SUPER_ADMIN") {
-    return true;
+    // Super administrators have unrestricted access.
+    if (user.role === "SUPER_ADMIN") {
+      return true;
+    }
+
+    // Safely handle users created before
+    // permissions were added to the auth system.
+    if (!Array.isArray(user.permissions)) {
+      return false;
+    }
+
+    return user.permissions.includes(
+      permission
+    );
   }
-
-  return user.permissions.includes(permission);
-}
 
   return (
-
     <AuthContext.Provider
       value={{
-
         user,
 
         token,
@@ -124,31 +170,22 @@ export function AuthProvider({
         logout,
 
         hasPermission,
-
       }}
     >
-
       {children}
-
     </AuthContext.Provider>
-
   );
-
 }
 
-export function useAuth(){
-
+export function useAuth() {
   const context =
     useContext(AuthContext);
 
-  if(!context){
-
+  if (!context) {
     throw new Error(
       "useAuth must be used inside AuthProvider."
     );
-
   }
 
   return context;
-
 }

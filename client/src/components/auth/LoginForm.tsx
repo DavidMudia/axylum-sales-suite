@@ -99,7 +99,7 @@ export default function LoginForm({
                 dark:text-blue-300
               "
             >
-              superadmin@axylum.com
+              admin@mudia.com
             </p>
 
             <p

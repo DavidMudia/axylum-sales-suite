@@ -7,120 +7,909 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-///////////////////////////////////////////////////////////
-// USER
-///////////////////////////////////////////////////////////
-
 model User {
   id                        Int                 @id @default(autoincrement())
-  employeeNumber            String              @unique
-  firstName                 String
-  lastName                  String
   email                     String              @unique
-  phone                     String?
   password                  String
-  roleId                    Int
-  role                      Role                @relation(fields: [roleId], references: [id])
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  deletedAt                 DateTime?
+  emailVerified             Boolean             @default(false)
+  employeeNumber            String              @unique
+  failedLoginAttempts       Int                 @default(0)
+  firstName                 String
   isActive                  Boolean             @default(true)
   lastLogin                 DateTime?
-  failedLoginAttempts       Int                 @default(0)
+  lastName                  String
+  loginAllowedFromDesktop   Boolean             @default(true)
+  loginAllowedFromMobile    Boolean             @default(true)
+  mustChangePassword        Boolean             @default(false)
   passwordChangedAt         DateTime?
-  settings                  Setting?
+  phone                     String?
+  profileImage              String?
+  refreshToken              String?
+  roleId                    Int
+  approvedApprovals         Approval[]          @relation("ApprovedBy")
+  requestedApprovals        Approval[]          @relation("RequestedBy")
+  auditLogs                 AuditLog[]
   customers                 Customer[]
-  quotes                    Quote[]
-  invoices                  Invoice[]
-  payments                  Payment[]
-  salesOrders               SalesOrder[]
   devices                   Device[]
-  loginHistory              LoginHistory[]
-  createdSuppliers          Supplier[]
-  sessions                  UserSession[]
-  notifications             Notification[]
-  createdPurchaseOrders     PurchaseOrder[]     @relation("PurchaseOrderCreatedBy")
-  approvedPurchaseOrders    PurchaseOrder[]     @relation("PurchaseOrderApprovedBy")
-  cancelledPurchaseOrders   PurchaseOrder[]     @relation("PurchaseOrderCancelledBy")
-  rejectedQuotes            Quote[]             @relation("QuoteRejectedBy")
   receivedGoodsReceipts     GoodsReceipt[]      @relation("GoodsReceiptReceivedBy")
   verifiedGoodsReceipts     GoodsReceipt[]      @relation("GoodsReceiptVerifiedBy")
-  auditLogs                 AuditLog[]
-  profileImage              String?
-  emailVerified             Boolean             @default(false)
   createdInventoryMovements InventoryMovement[]
-  createdStockCounts        StockCount[]
-  createdWaybills           Waybill[]           @relation("WaybillCreatedBy")
-  mustChangePassword        Boolean             @default(false)
-  refundsProcessed          Refund[]            @relation("RefundProcessedBy")
-  refundsApproved           Refund[]            @relation("RefundApprovedBy")
-  refreshToken              String?
+  approvedInvoices          Invoice[]           @relation("InvoiceApprovedBy")
+  invoices                  Invoice[]
   postedJournalEntries      JournalEntry[]      @relation("JournalPostedBy")
-  approvedSalesOrders       SalesOrder[]        @relation("SalesOrderApprovedBy")
-  cancelledSalesOrders      SalesOrder[]        @relation("SalesOrderCancelledBy")
-  deletedAt                 DateTime?
-  requestedApprovals        Approval[]          @relation("RequestedBy")
-  approvedApprovals         Approval[]          @relation("ApprovedBy")
+  loginHistory              LoginHistory[]
+  notifications             Notification[]
+  approvedPayments          Payment[]           @relation("PaymentApprovedBy")
+  cancelledPayments         Payment[]           @relation("PaymentCancelledBy")
+  payments                  Payment[]
   createdProducts           Product[]           @relation("ProductCreatedBy")
   updatedProducts           Product[]           @relation("ProductUpdatedBy")
+  approvedPurchaseOrders    PurchaseOrder[]     @relation("PurchaseOrderApprovedBy")
+  cancelledPurchaseOrders   PurchaseOrder[]     @relation("PurchaseOrderCancelledBy")
+  createdPurchaseOrders     PurchaseOrder[]     @relation("PurchaseOrderCreatedBy")
   approvedQuotes            Quote[]             @relation("QuoteApprovedBy")
-  approvedInvoices          Invoice[]           @relation("InvoiceApprovedBy")
-
-  createdReports          Report[]  @relation("ReportCreatedBy")
-  cancelledPayments       Payment[] @relation("PaymentCancelledBy")
-  approvedPayments        Payment[] @relation("PaymentApprovedBy")
-  loginAllowedFromMobile  Boolean   @default(true)
-  loginAllowedFromDesktop Boolean   @default(true)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  quotes                    Quote[]
+  rejectedQuotes            Quote[]             @relation("QuoteRejectedBy")
+  refundsApproved           Refund[]            @relation("RefundApprovedBy")
+  refundsProcessed          Refund[]            @relation("RefundProcessedBy")
+  createdReports            Report[]            @relation("ReportCreatedBy")
+  approvedSalesOrders       SalesOrder[]        @relation("SalesOrderApprovedBy")
+  cancelledSalesOrders      SalesOrder[]        @relation("SalesOrderCancelledBy")
+  salesOrders               SalesOrder[]
+  settings                  Setting?
+  createdStockCounts        StockCount[]
+  createdSuppliers          Supplier[]
+  role                      Role                @relation(fields: [roleId], references: [id])
+  sessions                  UserSession[]
+  createdWaybills           Waybill[]           @relation("WaybillCreatedBy")
 }
 
 model DocumentSequence {
-  id Int @id @default(autoincrement())
-
-  type DocumentType
-
-  year Int
-
-  currentNumber Int @default(0)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
+  id            Int          @id @default(autoincrement())
+  type          DocumentType
+  year          Int
+  currentNumber Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@unique([type, year])
 }
 
+model Role {
+  id              Int              @id @default(autoincrement())
+  description     String?
+  color           String?
+  isSystem        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  displayName     String
+  name            RoleName         @unique
+  rolePermissions RolePermission[]
+  users           User[]
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  action      PermissionAction
+  module      String
+  updatedAt   DateTime         @updatedAt
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  role         Role       @relation(fields: [roleId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+model AuditLog {
+  id           Int         @id @default(autoincrement())
+  userId       Int?
+  action       String
+  recordId     String?
+  recordNumber String?
+  oldValues    Json?
+  newValues    Json?
+  details      Json?
+  ipAddress    String?
+  userAgent    String?
+  endpoint     String?
+  method       String?
+  statusCode   Int?
+  createdAt    DateTime    @default(now())
+  module       AuditModule
+  user         User?       @relation(fields: [userId], references: [id])
+
+  @@index([module])
+  @@index([recordId])
+  @@index([createdAt])
+}
+
+model Approval {
+  id            Int            @id @default(autoincrement())
+  module        ApprovalModule
+  recordId      Int
+  requestedById Int
+  approvedById  Int?
+  status        ApprovalStatus @default(PENDING)
+  reason        String?
+  comments      String?
+  createdAt     DateTime       @default(now())
+  approvedAt    DateTime?
+  approvedBy    User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  requestedBy   User           @relation("RequestedBy", fields: [requestedById], references: [id])
+}
+
+model InventoryMovement {
+  id             Int                    @id @default(autoincrement())
+  inventoryId    Int
+  quantity       Int
+  movementType   MovementType
+  referenceId    Int
+  remarks        String?
+  createdById    Int
+  createdAt      DateTime               @default(now())
+  quantityAfter  Int
+  quantityBefore Int
+  referenceType  InventoryReferenceType
+  createdBy      User                   @relation(fields: [createdById], references: [id])
+  inventory      Inventory              @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+  @@index([createdAt])
+}
+
+model Inventory {
+  id                Int                 @id @default(autoincrement())
+  productId         Int
+  warehouseId       Int
+  quantity          Int
+  reservedQuantity  Int                 @default(0)
+  availableQuantity Int
+  reorderLevel      Int                 @default(20)
+  updatedAt         DateTime            @updatedAt
+  product           Product             @relation(fields: [productId], references: [id])
+  warehouse         Warehouse           @relation(fields: [warehouseId], references: [id])
+  movements         InventoryMovement[]
+
+  @@unique([productId, warehouseId])
+  @@index([productId])
+  @@index([warehouseId])
+}
+
+model PurchaseOrder {
+  id                   Int                 @id @default(autoincrement())
+  purchaseOrderNumber  String              @unique
+  supplierId           Int
+  warehouseId          Int
+  createdById          Int
+  approvedById         Int?
+  cancelledById        Int?
+  status               PurchaseOrderStatus @default(DRAFT)
+  supplierReference    String?
+  expectedDeliveryDate DateTime?
+  receivedAt           DateTime?
+  deliveryAddress      String?
+  notes                String?
+  cancellationReason   String?
+  subtotal             Float
+  discount             Float               @default(0)
+  tax                  Float               @default(0)
+  total                Float
+  isDeleted            Boolean             @default(false)
+  approvedAt           DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  goodsReceipts        GoodsReceipt[]
+  approvedBy           User?               @relation("PurchaseOrderApprovedBy", fields: [approvedById], references: [id])
+  cancelledBy          User?               @relation("PurchaseOrderCancelledBy", fields: [cancelledById], references: [id])
+  createdBy            User                @relation("PurchaseOrderCreatedBy", fields: [createdById], references: [id])
+  supplier             Supplier            @relation(fields: [supplierId], references: [id])
+  warehouse            Warehouse           @relation(fields: [warehouseId], references: [id])
+  items                PurchaseOrderItem[]
+
+  @@index([purchaseOrderNumber])
+  @@index([supplierId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([createdById])
+}
+
+model PurchaseOrderItem {
+  id                Int                @id @default(autoincrement())
+  purchaseOrderId   Int
+  productId         Int
+  quantity          Float
+  receivedQuantity  Float              @default(0)
+  unitCost          Float
+  discount          Float              @default(0)
+  tax               Float              @default(0)
+  total             Float
+  remarks           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  goodsReceiptItems GoodsReceiptItem[]
+  product           Product            @relation(fields: [productId], references: [id])
+  purchaseOrder     PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+}
+
+model Supplier {
+  id             Int             @id @default(autoincrement())
+  name           String
+  companyName    String?
+  contactPerson  String?
+  email          String?
+  phone          String
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  notes          String?
+  status         SupplierStatus  @default(ACTIVE)
+  isDeleted      Boolean         @default(false)
+  createdById    Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  goodsReceipts  GoodsReceipt[]
+  purchaseOrders PurchaseOrder[]
+  createdBy      User            @relation(fields: [createdById], references: [id])
+
+  @@index([name])
+  @@index([phone])
+}
+
+model GoodsReceipt {
+  id                    Int                @id @default(autoincrement())
+  receiptNumber         String             @unique
+  purchaseOrderId       Int
+  supplierId            Int
+  warehouseId           Int
+  receivedById          Int
+  verifiedById          Int?
+  status                GoodsReceiptStatus @default(RECEIVED)
+  supplierInvoiceNumber String?
+  supplierDeliveryNote  String?
+  truckNumber           String?
+  driverName            String?
+  remarks               String?
+  totalReceivedItems    Int                @default(0)
+  totalRejectedItems    Int                @default(0)
+  verifiedAt            DateTime?
+  isDeleted             Boolean            @default(false)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  purchaseOrder         PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id])
+  receivedBy            User               @relation("GoodsReceiptReceivedBy", fields: [receivedById], references: [id])
+  supplier              Supplier           @relation(fields: [supplierId], references: [id])
+  verifiedBy            User?              @relation("GoodsReceiptVerifiedBy", fields: [verifiedById], references: [id])
+  warehouse             Warehouse          @relation(fields: [warehouseId], references: [id])
+  items                 GoodsReceiptItem[]
+
+  @@index([receiptNumber])
+  @@index([purchaseOrderId])
+  @@index([supplierId])
+  @@index([warehouseId])
+  @@index([status])
+}
+
+model GoodsReceiptItem {
+  id                  Int               @id @default(autoincrement())
+  goodsReceiptId      Int
+  purchaseOrderItemId Int
+  productId           Int
+  orderedQuantity     Float
+  receivedQuantity    Float
+  rejectedQuantity    Float             @default(0)
+  acceptedQuantity    Float
+  unitCost            Float
+  remarks             String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  goodsReceipt        GoodsReceipt      @relation(fields: [goodsReceiptId], references: [id])
+  product             Product           @relation(fields: [productId], references: [id])
+  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id])
+
+  @@index([goodsReceiptId])
+  @@index([purchaseOrderItemId])
+  @@index([productId])
+}
+
+model Warehouse {
+  id             Int             @id @default(autoincrement())
+  name           String
+  code           String          @unique
+  address        String?
+  city           String?
+  state          String?
+  updatedAt      DateTime        @updatedAt
+  country        String?
+  createdAt      DateTime        @default(now())
+  description    String?
+  email          String?
+  isDeleted      Boolean         @default(false)
+  isPrimary      Boolean         @default(false)
+  managerName    String?
+  phone          String?
+  status         WarehouseStatus @default(ACTIVE)
+  goodsReceipts  GoodsReceipt[]
+  inventories    Inventory[]
+  purchaseOrders PurchaseOrder[]
+  salesOrders    SalesOrder[]
+  stockCounts    StockCount[]
+  waybills       Waybill[]
+
+  @@index([name])
+  @@index([code])
+  @@index([status])
+}
+
+model StockCount {
+  id          Int         @id @default(autoincrement())
+  warehouseId Int
+  startedById Int
+  status      CountStatus
+  createdAt   DateTime    @default(now())
+  completedAt DateTime?
+  startedBy   User        @relation(fields: [startedById], references: [id])
+  warehouse   Warehouse   @relation(fields: [warehouseId], references: [id])
+}
+
+model Vehicle {
+  id                 Int           @id @default(autoincrement())
+  registrationNumber String        @unique
+  fleetNumber        String        @unique
+  make               String
+  model              String
+  year               Int?
+  capacity           Float
+  capacityUnit       String
+  status             VehicleStatus
+  currentMileage     Int           @default(0)
+  gpsDeviceId        String?
+  assignedDriverId   Int?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  assignedDriver     Driver?       @relation("AssignedDriver", fields: [assignedDriverId], references: [id])
+  waybills           Waybill[]
+
+  @@index([status])
+}
+
+model Driver {
+  id               Int          @id @default(autoincrement())
+  employeeNumber   String       @unique
+  firstName        String
+  lastName         String
+  phone            String
+  licenseNumber    String
+  licenseExpiry    DateTime
+  status           DriverStatus
+  createdAt        DateTime     @default(now())
+  assignedVehicles Vehicle[]    @relation("AssignedDriver")
+  waybills         Waybill[]
+}
+
+model Waybill {
+  id               Int           @id @default(autoincrement())
+  waybillNumber    String        @unique
+  invoiceId        Int
+  vehicleId        Int
+  driverId         Int
+  warehouseId      Int
+  destination      String
+  status           WaybillStatus
+  dispatchedAt     DateTime?
+  deliveredAt      DateTime?
+  verificationCode String        @unique
+  signature        String
+  createdById      Int
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  createdBy        User          @relation("WaybillCreatedBy", fields: [createdById], references: [id])
+  driver           Driver        @relation(fields: [driverId], references: [id])
+  invoice          Invoice       @relation(fields: [invoiceId], references: [id])
+  vehicle          Vehicle       @relation(fields: [vehicleId], references: [id])
+  warehouse        Warehouse     @relation(fields: [warehouseId], references: [id])
+  items            WaybillItem[]
+
+  @@index([waybillNumber])
+  @@index([status])
+}
+
+model WaybillItem {
+  id        Int     @id @default(autoincrement())
+  waybillId Int
+  productId Int
+  quantity  Int
+  weight    Float?
+  product   Product @relation(fields: [productId], references: [id])
+  waybill   Waybill @relation(fields: [waybillId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id           Int           @id @default(autoincrement())
+  accountCode  String        @unique
+  name         String
+  type         AccountType
+  parentId     Int?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  parent       Account?      @relation("ChartHierarchy", fields: [parentId], references: [id])
+  children     Account[]     @relation("ChartHierarchy")
+  journalLines JournalLine[]
+}
+
+model JournalEntry {
+  id           Int              @id @default(autoincrement())
+  reference    String
+  description  String
+  sourceModule AccountingSource
+  sourceId     Int
+  postedById   Int
+  postedAt     DateTime         @default(now())
+  postedBy     User             @relation("JournalPostedBy", fields: [postedById], references: [id])
+  lines        JournalLine[]
+
+  @@index([postedAt])
+}
+
+model JournalLine {
+  id             Int          @id @default(autoincrement())
+  journalEntryId Int
+  accountId      Int
+  debit          Float        @default(0)
+  credit         Float        @default(0)
+  account        Account      @relation(fields: [accountId], references: [id])
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+}
+
+model Refund {
+  id               Int          @id @default(autoincrement())
+  refundNumber     String       @unique
+  paymentId        Int
+  invoiceId        Int
+  amount           Float
+  reason           String
+  status           RefundStatus @default(PENDING)
+  approvedById     Int?
+  processedById    Int?
+  createdAt        DateTime     @default(now())
+  approvedAt       DateTime?
+  customerId       Int
+  notes            String?
+  refundMethod     RefundMethod
+  rejectionReason  String?
+  verificationCode String       @unique
+  approvedBy       User?        @relation("RefundApprovedBy", fields: [approvedById], references: [id])
+  customer         Customer     @relation(fields: [customerId], references: [id])
+  invoice          Invoice      @relation(fields: [invoiceId], references: [id])
+  payment          Payment      @relation(fields: [paymentId], references: [id])
+  processedBy      User?        @relation("RefundProcessedBy", fields: [processedById], references: [id])
+}
+
+model SalesOrder {
+  id                   Int              @id @default(autoincrement())
+  orderNumber          String           @unique
+  quoteId              Int?
+  customerId           Int
+  createdById          Int
+  status               OrderStatus      @default(PENDING)
+  subtotal             Float
+  discount             Float
+  tax                  Float
+  total                Float
+  notes                String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  approvedAt           DateTime?
+  approvedById         Int?
+  cancellationReason   String?
+  cancelledAt          DateTime?
+  cancelledById        Int?
+  deliveryAddress      String?
+  deliveryInstructions String?
+  expectedDeliveryDate DateTime?
+  isDeleted            Boolean          @default(false)
+  deliveryFee          Float            @default(0)
+  labourFee            Float            @default(0)
+  warehouseId          Int?
+  invoice              Invoice?
+  approvedBy           User?            @relation("SalesOrderApprovedBy", fields: [approvedById], references: [id])
+  cancelledBy          User?            @relation("SalesOrderCancelledBy", fields: [cancelledById], references: [id])
+  createdBy            User             @relation(fields: [createdById], references: [id])
+  customer             Customer         @relation(fields: [customerId], references: [id])
+  quote                Quote?           @relation(fields: [quoteId], references: [id])
+  warehouse            Warehouse?       @relation(fields: [warehouseId], references: [id])
+  items                SalesOrderItem[]
+}
+
+model SalesOrderItem {
+  id              Int        @id @default(autoincrement())
+  orderId         Int
+  productId       Int
+  quantity        Int
+  unitPrice       Float
+  negotiatedPrice Float?
+  total           Float
+  order           SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product    @relation(fields: [productId], references: [id])
+}
+
+model Customer {
+  id                 Int            @id @default(autoincrement())
+  name               String
+  companyName        String?
+  email              String?
+  phone              String?
+  address            String?
+  city               String?
+  state              String?
+  country            String?
+  notes              String?
+  createdById        Int
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  isDeleted          Boolean        @default(false)
+  status             CustomerStatus @default(ACTIVE)
+  customerNumber     String         @unique
+  outstandingBalance Decimal        @default(0) @db.Decimal(18, 2)
+  createdBy          User           @relation(fields: [createdById], references: [id])
+  invoices           Invoice[]
+  payments           Payment[]
+  quotes             Quote[]
+  refunds            Refund[]
+  salesOrders        SalesOrder[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([email])
+  @@index([createdById])
+}
+
+model Device {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  deviceName String
+  deviceId   String    @unique
+  platform   String
+  lastLogin  DateTime?
+  trusted    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model LoginHistory {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  device     String?
+  browser    String?
+  ip         String?
+  location   String?
+  successful Boolean
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model UserSession {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  expiresAt DateTime
+  lastSeen  DateTime?
+  userId    Int
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  userId    Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Product {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  sku                String?             @unique
+  description        String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdById        Int
+  isDeleted          Boolean             @default(false)
+  minimumStock       Decimal             @default(0) @db.Decimal(18, 2)
+  reorderLevel       Decimal             @default(0) @db.Decimal(18, 2)
+  barcode            String?             @unique
+  costPrice          Decimal             @db.Decimal(18, 2)
+  currentStock       Decimal             @default(0) @db.Decimal(18, 2)
+  expiryDate         DateTime?
+  imageUrl           String?
+  isActive           Boolean             @default(true)
+  productNumber      String              @unique
+  reservedStock      Decimal             @default(0) @db.Decimal(18, 2)
+  sellingPrice       Decimal             @db.Decimal(18, 2)
+  unit               ProductUnit
+  updatedById        Int?
+  hasExpiryDate      Boolean             @default(false)
+  goodsReceiptItems  GoodsReceiptItem[]
+  inventories        Inventory[]
+  invoiceItems       InvoiceItem[]
+  createdBy          User                @relation("ProductCreatedBy", fields: [createdById], references: [id])
+  updatedBy          User?               @relation("ProductUpdatedBy", fields: [updatedById], references: [id])
+  purchaseOrderItems PurchaseOrderItem[]
+  quoteItems         QuoteItem[]
+  salesOrderItems    SalesOrderItem[]
+  waybillItems       WaybillItem[]
+
+  @@index([name])
+  @@index([productNumber])
+}
+
+model Quote {
+  id               Int          @id @default(autoincrement())
+  quoteNumber      String       @unique
+  customerId       Int
+  createdById      Int
+  status           QuoteStatus  @default(DRAFT)
+  subtotal         Float
+  tax              Float        @default(0)
+  discount         Float        @default(0)
+  total            Float
+  validUntil       DateTime?
+  notes            String?
+  isDeleted        Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  approvalNote     String?
+  approvedAt       DateTime?
+  approvedById     Int?
+  rejectedAt       DateTime?
+  rejectedById     Int?
+  verificationCode String       @unique
+  approvedBy       User?        @relation("QuoteApprovedBy", fields: [approvedById], references: [id])
+  createdBy        User         @relation(fields: [createdById], references: [id])
+  customer         Customer     @relation(fields: [customerId], references: [id])
+  rejectedBy       User?        @relation("QuoteRejectedBy", fields: [rejectedById], references: [id])
+  items            QuoteItem[]
+  salesOrders      SalesOrder[]
+
+  @@index([quoteNumber])
+  @@index([customerId])
+}
+
+model QuoteItem {
+  id              Int      @id @default(autoincrement())
+  quoteId         Int
+  productId       Int
+  quantity        Int
+  total           Float
+  unitPrice       Float
+  createdAt       DateTime @default(now())
+  discount        Float    @default(0)
+  negotiatedPrice Float?
+  remarks         String?
+  product         Product  @relation(fields: [productId], references: [id])
+  quote           Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id               Int                  @id @default(autoincrement())
+  invoiceNumber    String               @unique
+  customerId       Int
+  createdById      Int
+  status           InvoiceStatus        @default(UNPAID)
+  subtotal         Float
+  tax              Float                @default(0)
+  discount         Float                @default(0)
+  total            Float
+  dueDate          DateTime?
+  notes            String?
+  isDeleted        Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  approvalNote     String?
+  approvedAt       DateTime?
+  approvedById     Int?
+  isPrinted        Boolean              @default(false)
+  printedAt        DateTime?
+  verificationCode String               @unique
+  amountPaid       Float                @default(0)
+  balance          Float
+  isApproved       Boolean              @default(false)
+  salesOrderId     Int?                 @unique
+  paymentStatus    InvoicePaymentStatus @default(UNPAID)
+  deliveryFee      Float                @default(0)
+  labourFee        Float                @default(0)
+  approvedBy       User?                @relation("InvoiceApprovedBy", fields: [approvedById], references: [id])
+  createdBy        User                 @relation(fields: [createdById], references: [id])
+  customer         Customer             @relation(fields: [customerId], references: [id])
+  salesOrder       SalesOrder?          @relation(fields: [salesOrderId], references: [id])
+  items            InvoiceItem[]
+  services         InvoiceService[]
+  payments         Payment[]
+  refunds          Refund[]
+  waybills         Waybill[]
+
+  @@index([invoiceNumber])
+  @@index([customerId])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id        Int     @id @default(autoincrement())
+  invoiceId Int
+  productId Int
+  quantity  Int
+  unitPrice Float
+  total     Float
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model InvoiceService {
+  id          Int                @id @default(autoincrement())
+  invoiceId   Int
+  type        InvoiceServiceType
+  description String?
+  quantity    Float              @default(1)
+  unitPrice   Float
+  total       Float
+  createdAt   DateTime           @default(now())
+  invoice     Invoice            @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id                 Int           @id @default(autoincrement())
+  paymentNumber      String        @unique
+  invoiceId          Int
+  customerId         Int
+  createdById        Int
+  amount             Float
+  paymentMethod      PaymentMethod
+  status             PaymentStatus
+  transactionId      String?
+  notes              String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  approvedAt         DateTime?
+  approvedById       Int?
+  receiptNumber      String?
+  receivedDate       DateTime      @default(now())
+  verificationCode   String        @unique
+  cancellationReason String?
+  cancelledAt        DateTime?
+  cancelledById      Int?
+  refundedAmount     Float         @default(0)
+  approvedBy         User?         @relation("PaymentApprovedBy", fields: [approvedById], references: [id])
+  cancelledBy        User?         @relation("PaymentCancelledBy", fields: [cancelledById], references: [id])
+  createdBy          User          @relation(fields: [createdById], references: [id])
+  customer           Customer      @relation(fields: [customerId], references: [id])
+  invoice            Invoice       @relation(fields: [invoiceId], references: [id])
+  refunds            Refund[]
+}
+
+model Setting {
+  id                 Int          @id @default(autoincrement())
+  companyName        String
+  industry           String?
+  registrationNumber String?
+  taxNumber          String?
+  email              String?
+  phone              String?
+  website            String?
+  address            String?
+  city               String?
+  state              String?
+  country            String?
+  currency           String       @default("NGN")
+  currencySymbol     String       @default("₦")
+  tax                Float        @default(0)
+  quotePrefix        String       @default("QT")
+  invoicePrefix      String       @default("INV")
+  paymentPrefix      String       @default("PAY")
+  expensePrefix      String       @default("EXP")
+  quoteValidity      Int          @default(30)
+  invoiceDueDays     Int          @default(30)
+  decimalPlaces      Int          @default(2)
+  theme              Theme        @default(SYSTEM)
+  primaryColor       String       @default("#2563eb")
+  compactMode        Boolean      @default(false)
+  sidebarCollapsed   Boolean      @default(false)
+  fontSize           FontSize     @default(MEDIUM)
+  tableDensity       TableDensity @default(COMFORTABLE)
+  createdById        Int          @unique
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  companyLogo        String?
+  dateFormat         String       @default("DD/MM/YYYY")
+  timeFormat         String       @default("24H")
+  timezone           String       @default("Africa/Lagos")
+  createdBy          User         @relation(fields: [createdById], references: [id])
+}
+
+model Report {
+  id          Int           @id @default(autoincrement())
+  name        String
+  type        String
+  filters     Json
+  generatedAt DateTime      @default(now())
+  createdById Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdBy   User          @relation("ReportCreatedBy", fields: [createdById], references: [id])
+  results     ReportResult?
+
+  @@index([type])
+  @@index([createdById])
+}
+
+model ReportResult {
+  id          Int      @id @default(autoincrement())
+  reportId    Int      @unique
+  data        Json
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  report      Report   @relation(fields: [reportId], references: [id])
+
+  @@index([reportId])
+}
+
+model Expense {
+  id          Int             @id @default(autoincrement())
+  description String
+  category    ExpenseCategory
+  amount      Float
+  date        DateTime        @default(now())
+  reference   String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([date])
+  @@index([category])
+}
+
+model Budget {
+  id        Int      @id @default(autoincrement())
+  month     Int
+  year      Int
+  revenue   Float    @default(0)
+  expenses  Float    @default(0)
+  profit    Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, year])
+}
+
 enum DocumentType {
-  CUSTOMER
-  PRODUCT
   QUOTE
   SALES_ORDER
   INVOICE
   PAYMENT
   REFUND
+  WAYBILL
   PURCHASE_ORDER
   GOODS_RECEIPT
-  WAYBILL
-}
-
-model Role {
-  id Int @id @default(autoincrement())
-
-  name RoleName @unique
-
-  displayName String
-
-  description String?
-
-  color String?
-
-  isSystem Boolean @default(true)
-
-  users User[]
-
-  rolePermissions RolePermission[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
+  PRODUCT
+  CUSTOMER
 }
 
 enum RoleName {
@@ -129,24 +918,6 @@ enum RoleName {
   SALES
   STORE_KEEPER
   ACCOUNTANT
-}
-
-model Permission {
-  id Int @id @default(autoincrement())
-
-  module String
-
-  action PermissionAction
-
-  name String @unique
-
-  description String?
-
-  roles RolePermission[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
 }
 
 enum PermissionAction {
@@ -162,51 +933,6 @@ enum PermissionAction {
   CANCEL
 }
 
-model RolePermission {
-  roleId Int
-
-  permissionId Int
-
-  role Role @relation(fields: [roleId], references: [id])
-
-  permission Permission @relation(fields: [permissionId], references: [id])
-
-  createdAt DateTime @default(now())
-
-  @@id([roleId, permissionId])
-}
-
-model AuditLog {
-  id Int @id @default(autoincrement())
-
-  userId Int?
-  user   User? @relation(fields: [userId], references: [id])
-
-  action String
-  module AuditModule
-
-  recordId     String?
-  recordNumber String?
-
-  oldValues Json?
-  newValues Json?
-  details   Json?
-
-  ipAddress String?
-  userAgent String?
-
-  endpoint String?
-  method   String?
-
-  statusCode Int?
-
-  createdAt DateTime @default(now())
-
-  @@index([module])
-  @@index([recordId])
-  @@index([createdAt])
-}
-
 enum AuditModule {
   PAYMENT
   REFUND
@@ -216,113 +942,23 @@ enum AuditModule {
   INVENTORY_COUNT
 }
 
-model Approval {
-  id Int @id @default(autoincrement())
-
-  module ApprovalModule
-
-  recordId Int
-
-  requestedById Int
-  requestedBy   User @relation("RequestedBy", fields: [requestedById], references: [id])
-
-  approvedById Int?
-  approvedBy   User? @relation("ApprovedBy", fields: [approvedById], references: [id])
-
-  status ApprovalStatus @default(PENDING)
-
-  reason String?
-
-  comments String?
-
-  createdAt DateTime @default(now())
-
-  approvedAt DateTime?
-}
-
 enum ApprovalStatus {
   PENDING
-
   APPROVED
-
   REJECTED
-
   CANCELLED
 }
 
 enum ApprovalModule {
   QUOTE
-
   INVOICE
-
   PAYMENT
-
   REFUND
-
   WAYBILL
-
   PURCHASE_ORDER
-
   GOODS_RECEIPT
-
   PRICE_OVERRIDE
-
   INVENTORY
-}
-
-model InventoryMovement {
-  id Int @id @default(autoincrement())
-
-  inventoryId Int
-  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-
-  quantity Int
-
-  quantityBefore Int
-
-  quantityAfter Int
-
-  movementType MovementType
-
-  referenceType InventoryReferenceType
-
-  referenceId Int
-
-  remarks String?
-
-  createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  createdAt DateTime @default(now())
-
-  @@index([inventoryId])
-  @@index([createdAt])
-}
-
-model Inventory {
-  id Int @id @default(autoincrement())
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
-  warehouseId Int
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-
-  quantity Int
-
-  reservedQuantity Int @default(0)
-
-  availableQuantity Int
-
-  reorderLevel Int @default(20)
-
-  movements InventoryMovement[]
-
-  updatedAt DateTime @updatedAt
-
-  @@unique([productId, warehouseId])
-  @@index([productId])
-  @@index([warehouseId])
 }
 
 enum InventoryReferenceType {
@@ -347,149 +983,11 @@ enum PurchaseOrderStatus {
   CANCELLED
 }
 
-model PurchaseOrder {
-  id Int @id @default(autoincrement())
-
-  purchaseOrderNumber String @unique
-
-  supplierId Int
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-
-  warehouseId Int
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-
-  createdById Int
-  createdBy   User @relation("PurchaseOrderCreatedBy", fields: [createdById], references: [id])
-
-  approvedById Int?
-  approvedBy   User? @relation("PurchaseOrderApprovedBy", fields: [approvedById], references: [id])
-
-  cancelledById Int?
-  cancelledBy   User? @relation("PurchaseOrderCancelledBy", fields: [cancelledById], references: [id])
-
-  status PurchaseOrderStatus @default(DRAFT)
-
-  supplierReference String?
-
-  expectedDeliveryDate DateTime?
-
-  receivedAt DateTime?
-
-  deliveryAddress String?
-
-  notes String?
-
-  cancellationReason String?
-
-  subtotal Float
-
-  discount Float @default(0)
-
-  tax Float @default(0)
-
-  total Float
-
-  items PurchaseOrderItem[]
-
-  goodsReceipts GoodsReceipt[]
-
-  isDeleted Boolean @default(false)
-
-  approvedAt DateTime?
-
-  cancelledAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([purchaseOrderNumber])
-  @@index([supplierId])
-  @@index([warehouseId])
-  @@index([status])
-  @@index([createdById])
-}
-
-model PurchaseOrderItem {
-  id Int @id @default(autoincrement())
-
-  purchaseOrderId Int
-
-  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
-
-  productId Int
-
-  product Product @relation(fields: [productId], references: [id])
-
-  quantity Float
-
-  receivedQuantity Float @default(0)
-
-  unitCost Float
-
-  discount Float @default(0)
-
-  tax Float @default(0)
-
-  total Float
-
-  remarks String?
-
-  goodsReceiptItems GoodsReceiptItem[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([purchaseOrderId])
-  @@index([productId])
-}
-
 enum SupplierStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
   BLACKLISTED
-}
-
-model Supplier {
-  id Int @id @default(autoincrement())
-
-  name String
-
-  companyName String?
-
-  contactPerson String?
-
-  email String?
-
-  phone String
-
-  address String?
-
-  city String?
-
-  state String?
-
-  country String?
-
-  notes String?
-
-  status SupplierStatus @default(ACTIVE)
-
-  purchaseOrders PurchaseOrder[]
-  goodsReceipts  GoodsReceipt[]
-
-  isDeleted Boolean @default(false)
-
-  createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-  @@index([phone])
 }
 
 enum GoodsReceiptStatus {
@@ -499,167 +997,22 @@ enum GoodsReceiptStatus {
   CANCELLED
 }
 
-model GoodsReceipt {
-  id Int @id @default(autoincrement())
-
-  receiptNumber String @unique
-
-  purchaseOrderId Int
-  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
-
-  supplierId Int
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-
-  warehouseId Int
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-
-  receivedById Int
-  receivedBy   User @relation("GoodsReceiptReceivedBy", fields: [receivedById], references: [id])
-
-  verifiedById Int?
-  verifiedBy   User? @relation("GoodsReceiptVerifiedBy", fields: [verifiedById], references: [id])
-
-  status GoodsReceiptStatus @default(RECEIVED)
-
-  supplierInvoiceNumber String?
-
-  supplierDeliveryNote String?
-
-  truckNumber String?
-
-  driverName String?
-
-  remarks String?
-
-  totalReceivedItems Int @default(0)
-
-  totalRejectedItems Int @default(0)
-
-  verifiedAt DateTime?
-
-  isDeleted Boolean @default(false)
-
-  items GoodsReceiptItem[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([receiptNumber])
-  @@index([purchaseOrderId])
-  @@index([supplierId])
-  @@index([warehouseId])
-  @@index([status])
-}
-
-model GoodsReceiptItem {
-  id Int @id @default(autoincrement())
-
-  goodsReceiptId Int
-  goodsReceipt   GoodsReceipt @relation(fields: [goodsReceiptId], references: [id])
-
-  purchaseOrderItemId Int
-  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id])
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
-  orderedQuantity Float
-
-  receivedQuantity Float
-
-  rejectedQuantity Float @default(0)
-
-  acceptedQuantity Float
-
-  unitCost Float
-
-  remarks String?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([goodsReceiptId])
-  @@index([purchaseOrderItemId])
-  @@index([productId])
-}
-
 enum WarehouseStatus {
   ACTIVE
   INACTIVE
 }
 
-model Warehouse {
-  id Int @id @default(autoincrement())
-
-  name String
-
-  code String @unique
-
-  description String?
-
-  address String?
-
-  city String?
-
-  state String?
-
-  country String?
-
-  phone String?
-
-  email String?
-
-  managerName String?
-
-  isPrimary Boolean @default(false)
-
-  status WarehouseStatus @default(ACTIVE)
-
-  inventories Inventory[]
-  salesOrders SalesOrder[]
-
-  purchaseOrders PurchaseOrder[]
-
-  goodsReceipts GoodsReceipt[]
-
-  stockCounts StockCount[]
-
-  waybills Waybill[]
-
-  isDeleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-  @@index([code])
-  @@index([status])
-}
-
 enum MovementType {
   PURCHASE
-
   SALE
-
   RETURN
-
   REFUND
-
   TRANSFER
-
   ADJUSTMENT
-
   COUNT
-
   DAMAGED
-
   LOST
-
   RESERVED
-
   RELEASED
 }
 
@@ -710,243 +1063,12 @@ enum RefundStatus {
   PROCESSED
 }
 
-model StockCount {
-  id Int @id @default(autoincrement())
-
-  warehouseId Int
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-  startedById Int
-  startedBy   User      @relation(fields: [startedById], references: [id])
-
-  status CountStatus
-
-  createdAt DateTime @default(now())
-
-  completedAt DateTime?
-}
-
-model Vehicle {
-  id Int @id @default(autoincrement())
-
-  registrationNumber String @unique
-
-  fleetNumber String @unique
-
-  make String
-
-  model String
-
-  year Int?
-
-  capacity Float
-
-  capacityUnit String
-
-  waybills Waybill[]
-  status   VehicleStatus
-
-  currentMileage Int @default(0)
-
-  gpsDeviceId String?
-
-  assignedDriverId Int?
-
-  assignedDriver Driver? @relation("AssignedDriver", fields: [assignedDriverId], references: [id])
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([status])
-}
-
 enum VehicleStatus {
   AVAILABLE
-
   LOADING
-
   ON_DELIVERY
-
   MAINTENANCE
-
   OUT_OF_SERVICE
-}
-
-model Driver {
-  id Int @id @default(autoincrement())
-
-  employeeNumber String @unique
-
-  firstName String
-
-  lastName String
-
-  phone String
-
-  licenseNumber String
-
-  licenseExpiry DateTime
-
-  status DriverStatus
-
-  assignedVehicles Vehicle[] @relation("AssignedDriver")
-
-  waybills Waybill[]
-
-  createdAt DateTime @default(now())
-}
-
-model Waybill {
-  id Int @id @default(autoincrement())
-
-  waybillNumber String @unique
-
-  invoiceId Int
-  invoice   Invoice @relation(fields: [invoiceId], references: [id])
-
-  vehicleId Int
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
-
-  driverId Int
-  driver   Driver @relation(fields: [driverId], references: [id])
-
-  warehouseId Int
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-
-  createdBy User          @relation("WaybillCreatedBy", fields: [createdById], references: [id])
-  items     WaybillItem[]
-
-  destination String
-
-  status WaybillStatus
-
-  dispatchedAt DateTime?
-
-  deliveredAt DateTime?
-
-  verificationCode String @unique
-
-  signature String
-
-  createdById Int
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([waybillNumber])
-  @@index([status])
-}
-
-model WaybillItem {
-  id Int @id @default(autoincrement())
-
-  waybillId Int
-  waybill   Waybill @relation(fields: [waybillId], references: [id], onDelete: Cascade)
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
-  quantity Int
-
-  weight Float?
-}
-
-model Account {
-  id Int @id @default(autoincrement())
-
-  accountCode String @unique
-
-  name String
-
-  type AccountType
-
-  parentId Int?
-
-  parent Account? @relation("ChartHierarchy", fields: [parentId], references: [id])
-
-  children Account[] @relation("ChartHierarchy")
-
-  journalLines JournalLine[]
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-}
-
-model JournalEntry {
-  id Int @id @default(autoincrement())
-
-  reference String
-
-  description String
-
-  sourceModule AccountingSource
-
-  sourceId Int
-
-  postedById Int
-
-  postedBy User @relation("JournalPostedBy", fields: [postedById], references: [id])
-
-  postedAt DateTime @default(now())
-
-  lines JournalLine[]
-
-  @@index([postedAt])
-}
-
-model JournalLine {
-  id Int @id @default(autoincrement())
-
-  journalEntryId Int
-  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
-
-  accountId Int
-  account   Account @relation(fields: [accountId], references: [id])
-
-  debit Float @default(0)
-
-  credit Float @default(0)
-}
-
-model Refund {
-  id Int @id @default(autoincrement())
-
-  refundNumber String @unique
-
-  verificationCode String @unique
-
-  paymentId Int
-  payment   Payment @relation(fields: [paymentId], references: [id])
-
-  invoiceId Int
-  invoice   Invoice @relation(fields: [invoiceId], references: [id])
-
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  amount Float
-
-  refundMethod RefundMethod
-
-  reason String
-
-  notes String?
-
-  status RefundStatus @default(PENDING)
-
-  approvedAt DateTime?
-
-  rejectionReason String?
-
-  approvedById Int?
-  approvedBy   User? @relation("RefundApprovedBy", fields: [approvedById], references: [id])
-
-  processedById Int?
-  processedBy   User? @relation("RefundProcessedBy", fields: [processedById], references: [id])
-
-  createdAt DateTime @default(now())
 }
 
 enum RefundMethod {
@@ -955,75 +1077,6 @@ enum RefundMethod {
   CARD
   CHEQUE
   OTHER
-}
-
-model SalesOrder {
-  id Int @id @default(autoincrement())
-
-  orderNumber String @unique
-
-  quoteId Int?
-
-  quote Quote? @relation(fields: [quoteId], references: [id])
-
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  createdById Int
-  createdBy   User  @relation(fields: [createdById], references: [id])
-  deliveryFee Float @default(0)
-
-  labourFee     Float       @default(0)
-  status        OrderStatus @default(PENDING)
-  invoice       Invoice?
-  approvedById  Int?
-  approvedBy    User?       @relation("SalesOrderApprovedBy", fields: [approvedById], references: [id])
-  cancelledById Int?
-  cancelledBy   User?       @relation("SalesOrderCancelledBy", fields: [cancelledById], references: [id])
-  warehouseId Int?
-  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
-  approvedAt  DateTime?
-  cancelledAt DateTime?
-
-  cancellationReason String?
-
-  deliveryAddress String?
-
-  deliveryInstructions String?
-
-  expectedDeliveryDate DateTime?
-
-  isDeleted Boolean @default(false)
-
-  subtotal Float
-  discount Float
-  tax      Float
-  total    Float
-
-  notes String?
-
-  items SalesOrderItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model SalesOrderItem {
-  id Int @id @default(autoincrement())
-
-  orderId Int
-  order   SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
-  quantity Int
-
-  unitPrice Float
-
-  negotiatedPrice Float?
-
-  total Float
 }
 
 enum OrderStatus {
@@ -1037,208 +1090,12 @@ enum OrderStatus {
   CANCELLED
 }
 
-///////////////////////////////////////////////////////////
-// CUSTOMER
-///////////////////////////////////////////////////////////
+/// ////////////////////////////////////////////////////////
+/// ////////////////////////////////////////////////////////
 enum CustomerStatus {
   ACTIVE
   INACTIVE
   BLOCKED
-}
-
-model Customer {
-  id Int @id @default(autoincrement())
-
-  customerNumber String @unique
-
-  name String
-
-  companyName String?
-
-  email String?
-
-  phone String?
-
-  address String?
-
-  city String?
-
-  state String?
-
-  country String?
-
-  status CustomerStatus @default(ACTIVE)
-
-  outstandingBalance Decimal @default(0) @db.Decimal(18, 2)
-
-  notes String?
-
-  isDeleted Boolean @default(false)
-
-  createdById Int
-
-  createdBy User @relation(fields: [createdById], references: [id])
-
-  quotes Quote[]
-
-  invoices Invoice[]
-
-  payments Payment[]
-
-  salesOrders SalesOrder[]
-
-  refunds Refund[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-  @@index([phone])
-  @@index([email])
-  @@index([createdById])
-}
-
-model Device {
-  id Int @id @default(autoincrement())
-
-  userId Int
-
-  user User @relation(fields: [userId], references: [id])
-
-  deviceName String
-
-  deviceId String @unique
-
-  platform String
-
-  lastLogin DateTime?
-
-  trusted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-}
-
-model LoginHistory {
-  id Int @id @default(autoincrement())
-
-  userId Int
-
-  user User @relation(fields: [userId], references: [id])
-
-  device String?
-
-  browser String?
-
-  ip String?
-
-  location String?
-
-  successful Boolean
-
-  createdAt DateTime @default(now())
-}
-
-model UserSession {
-  id Int @id @default(autoincrement())
-
-  token String @unique
-
-  expiresAt DateTime
-
-  lastSeen DateTime?
-
-  userId Int
-
-  user User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-}
-
-model Notification {
-  id Int @id @default(autoincrement())
-
-  title String
-
-  message String
-
-  type String
-
-  isRead Boolean @default(false)
-
-  userId Int
-
-  user User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-}
-
-///////////////////////////////////////////////////////////
-// PRODUCT
-///////////////////////////////////////////////////////////
-
-model Product {
-  id Int @id @default(autoincrement())
-
-  productNumber String @unique
-
-  name String
-
-  description String?
-
-  sku String? @unique
-
-  barcode String? @unique
-
-  purchaseOrderItems PurchaseOrderItem[]
-
-  goodsReceiptItems GoodsReceiptItem[]
-
-  salesOrderItems SalesOrderItem[]
-
-  quoteItems QuoteItem[]
-
-  invoiceItems InvoiceItem[]
-  inventories  Inventory[]
-
-  waybillItems WaybillItem[]
-
-  unit ProductUnit
-
-  costPrice Decimal @db.Decimal(18, 2)
-
-  sellingPrice Decimal @db.Decimal(18, 2)
-
-  currentStock Decimal @default(0) @db.Decimal(18, 2)
-
-  reservedStock Decimal @default(0) @db.Decimal(18, 2)
-
-  minimumStock Decimal @default(0) @db.Decimal(18, 2)
-
-  reorderLevel Decimal @default(0) @db.Decimal(18, 2)
-
-  expiryDate    DateTime?
-  hasExpiryDate Boolean   @default(false)
-  imageUrl      String?
-
-  isActive Boolean @default(true)
-
-  isDeleted Boolean @default(false)
-
-  createdById Int
-
-  createdBy User @relation("ProductCreatedBy", fields: [createdById], references: [id])
-
-  updatedById Int?
-
-  updatedBy User? @relation("ProductUpdatedBy", fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-  @@index([productNumber])
 }
 
 enum ProductUnit {
@@ -1253,57 +1110,6 @@ enum ProductUnit {
   TON
 }
 
-///////////////////////////////////////////////////////////
-// QUOTE
-///////////////////////////////////////////////////////////
-
-model Quote {
-  id Int @id @default(autoincrement())
-
-  quoteNumber String @unique
-
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  status QuoteStatus @default(DRAFT)
-
-  subtotal Float
-  tax      Float @default(0)
-  discount Float @default(0)
-  total    Float
-
-  validUntil DateTime?
-  notes      String?
-
-  items       QuoteItem[]
-  salesOrders SalesOrder[]
-
-  isDeleted Boolean @default(false)
-
-  verificationCode String @unique
-
-  approvedById Int?
-  approvedBy   User? @relation("QuoteApprovedBy", fields: [approvedById], references: [id])
-
-  approvedAt DateTime?
-
-  rejectedById Int?
-  rejectedBy   User? @relation("QuoteRejectedBy", fields: [rejectedById], references: [id])
-
-  rejectedAt DateTime?
-
-  approvalNote String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([quoteNumber])
-  @@index([customerId])
-}
-
 enum QuoteStatus {
   DRAFT
   SENT
@@ -1312,120 +1118,10 @@ enum QuoteStatus {
   EXPIRED
 }
 
-///////////////////////////////////////////////////////////
-// QUOTE ITEM
-///////////////////////////////////////////////////////////
-
-model QuoteItem {
-  id Int @id @default(autoincrement())
-
-  quoteId Int
-  quote   Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
-  quantity Int
-
-  unitPrice Float
-
-  negotiatedPrice Float?
-
-  discount Float @default(0)
-
-  total Float
-
-  remarks String?
-
-  createdAt DateTime @default(now())
-}
-
-model Invoice {
-  id Int @id @default(autoincrement())
-
-  invoiceNumber String @unique
-
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  status InvoiceStatus @default(UNPAID)
-
-  subtotal Float
-
-  deliveryFee Float @default(0)
-
-  labourFee Float @default(0)
-
-  tax Float @default(0)
-
-  discount Float @default(0)
-
-  total Float
-
-  dueDate DateTime?
-
-  notes String?
-
-  items        InvoiceItem[]
-  salesOrderId Int?          @unique
-  salesOrder   SalesOrder?   @relation(fields: [salesOrderId], references: [id])
-
-  waybills Waybill[]
-
-  refunds    Refund[]
-  amountPaid Float    @default(0)
-
-  balance Float
-
-  paymentStatus    InvoicePaymentStatus @default(UNPAID)
-  payments         Payment[]
-  verificationCode String               @unique
-
-  approvedById Int?
-  approvedBy   User? @relation("InvoiceApprovedBy", fields: [approvedById], references: [id])
-
-  approvedAt DateTime?
-
-  approvalNote String?
-
-  isPrinted Boolean @default(false)
-
-  printedAt DateTime?
-
-  isDeleted  Boolean          @default(false)
-  isApproved Boolean          @default(false)
-  services   InvoiceService[]
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  @@index([invoiceNumber])
-  @@index([customerId])
-  @@index([status])
-}
-
 enum InvoicePaymentStatus {
   UNPAID
   PARTIAL
   PAID
-}
-
-model InvoiceItem {
-  id Int @id @default(autoincrement())
-
-  invoiceId Int
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-
-  quantity Int
-
-  unitPrice Float
-
-  total Float
 }
 
 enum InvoiceStatus {
@@ -1438,77 +1134,6 @@ enum InvoiceStatus {
 enum InvoiceServiceType {
   DELIVERY
   LABOUR
-}
-
-model InvoiceService {
-  id Int @id @default(autoincrement())
-
-  invoiceId Int
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  type InvoiceServiceType
-
-  description String?
-
-  quantity Float @default(1)
-
-  unitPrice Float
-
-  total Float
-
-  createdAt DateTime @default(now())
-}
-
-///////////////////////////////////////////////////////////
-// PAYMENT
-///////////////////////////////////////////////////////////
-
-model Payment {
-  id Int @id @default(autoincrement())
-
-  paymentNumber String @unique
-
-  invoiceId Int
-  invoice   Invoice @relation(fields: [invoiceId], references: [id])
-
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  createdById Int
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  cancelledById Int?
-  cancelledBy   User?    @relation("PaymentCancelledBy", fields: [cancelledById], references: [id])
-  refunds       Refund[]
-  approvedById  Int?
-  approvedBy    User?    @relation("PaymentApprovedBy", fields: [approvedById], references: [id])
-  amount        Float
-
-  paymentMethod PaymentMethod
-
-  status PaymentStatus
-
-  approvedAt DateTime?
-
-  cancelledAt DateTime?
-
-  cancellationReason String?
-
-  receivedDate DateTime @default(now())
-
-  receiptNumber String?
-
-  verificationCode String @unique
-
-  transactionId String?
-
-  notes String?
-
-  refundedAmount Float @default(0)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
 }
 
 enum PaymentMethod {
@@ -1544,108 +1169,6 @@ enum TableDensity {
   SPACIOUS
 }
 
-model Setting {
-  id Int @id @default(autoincrement())
-
-  // Business
-  companyName        String
-  industry           String?
-  registrationNumber String?
-  taxNumber          String?
-
-  email   String?
-  phone   String?
-  website String?
-
-  address String?
-  city    String?
-  state   String?
-  country String?
-
-  // Finance
-  currency       String @default("NGN")
-  currencySymbol String @default("₦")
-
-  tax Float @default(0)
-
-  quotePrefix   String @default("QT")
-  invoicePrefix String @default("INV")
-  paymentPrefix String @default("PAY")
-  expensePrefix String @default("EXP")
-
-  quoteValidity  Int @default(30)
-  invoiceDueDays Int @default(30)
-
-  decimalPlaces Int @default(2)
-
-  // Appearance
-  theme            Theme   @default(SYSTEM)
-  primaryColor     String  @default("#2563eb")
-  compactMode      Boolean @default(false)
-  sidebarCollapsed Boolean @default(false)
-
-  fontSize     FontSize     @default(MEDIUM)
-  tableDensity TableDensity @default(COMFORTABLE)
-
-  companyLogo String?
-
-  timezone String @default("Africa/Lagos")
-
-  dateFormat String @default("DD/MM/YYYY")
-
-  timeFormat String @default("24H")
-
-  createdById Int  @unique
-  createdBy   User @relation(fields: [createdById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Schema for storing report definitions and cached results
-model Report {
-  id          Int           @id @default(autoincrement())
-  name        String
-  type        String // "sales", "inventory", "financial"
-  filters     Json
-  generatedAt DateTime      @default(now())
-  createdById Int
-  createdBy   User          @relation("ReportCreatedBy", fields: [createdById], references: [id])
-  results     ReportResult?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([type])
-  @@index([createdById])
-}
-
-model ReportResult {
-  id          Int      @id @default(autoincrement())
-  reportId    Int      @unique
-  report      Report   @relation(fields: [reportId], references: [id])
-  data        Json
-  generatedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([reportId])
-}
-// Operating expenses (marketing, fuel, staff, repairs, utilities, etc.)
-model Expense {
-  id          Int      @id @default(autoincrement())
-  description String
-  category    ExpenseCategory
-  amount      Float
-  date        DateTime @default(now())
-  reference   String?  // invoice or payment reference
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([date])
-  @@index([category])
-}
-
 enum ExpenseCategory {
   TRANSPORTATION
   FUEL
@@ -1654,18 +1177,4 @@ enum ExpenseCategory {
   MARKETING
   UTILITIES
   OTHER
-}
-
-// Budget for revenue, expenses, profit by month/year
-model Budget {
-  id          Int      @id @default(autoincrement())
-  month       Int      // 1-12
-  year        Int
-  revenue     Float    @default(0)
-  expenses    Float    @default(0)
-  profit      Float    @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([month, year])
 }

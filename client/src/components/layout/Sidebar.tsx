@@ -7,19 +7,12 @@ import {
 import { navigation } from "./navigation";
 import SidebarSection from "./SidebarSection";
 
-
 type Props = {
   open: boolean;
-
   collapsed: boolean;
-
-  setCollapsed: (
-    value: boolean
-  ) => void;
-
+  setCollapsed: (value: boolean) => void;
   onClose: () => void;
 };
-
 
 export default function Sidebar({
   open,
@@ -27,11 +20,9 @@ export default function Sidebar({
   setCollapsed,
   onClose,
 }: Props) {
-
-
   return (
     <>
-
+      {/* Mobile overlay */}
       {open && (
         <div
           onClick={onClose}
@@ -44,8 +35,6 @@ export default function Sidebar({
           "
         />
       )}
-
-
 
       <aside
         className={`
@@ -61,11 +50,7 @@ export default function Sidebar({
           transition-all
           duration-300
 
-          ${
-            collapsed
-              ? "w-20"
-              : "w-72"
-          }
+          ${collapsed ? "w-20" : "w-72"}
 
           ${
             open
@@ -74,10 +59,7 @@ export default function Sidebar({
           }
         `}
       >
-
-
         {/* Logo */}
-
         <div
           className="
             flex
@@ -89,12 +71,8 @@ export default function Sidebar({
             px-5
           "
         >
-
-
           {!collapsed && (
-
             <div>
-
               <h1
                 className="
                   text-lg
@@ -106,26 +84,16 @@ export default function Sidebar({
                 AXYLUM
               </h1>
 
-
-              <p
-                className="
-                  text-xs
-                  text-slate-400
-                "
-              >
+              <p className="text-xs text-slate-400">
                 Sales Suite ERP
               </p>
-
             </div>
-
           )}
 
-
-
+          {/* Desktop collapse */}
           <button
-            onClick={() =>
-              setCollapsed(!collapsed)
-            }
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
             className="
               hidden
               rounded-lg
@@ -136,48 +104,31 @@ export default function Sidebar({
               lg:block
             "
           >
-
-            {
-              collapsed
-                ? (
-                    <ChevronRight
-                      size={18}
-                    />
-                  )
-                : (
-                    <ChevronLeft
-                      size={18}
-                    />
-                  )
-            }
-
+            {collapsed ? (
+              <ChevronRight size={18} />
+            ) : (
+              <ChevronLeft size={18} />
+            )}
           </button>
 
-
-
+          {/* Mobile close */}
           <button
+            type="button"
             onClick={onClose}
             className="
               rounded-lg
               p-2
               text-slate-400
               hover:bg-slate-800
+              hover:text-white
               lg:hidden
             "
           >
-
-            <X size={18}/>
-
+            <X size={18} />
           </button>
-
-
         </div>
 
-
-
-
         {/* Navigation */}
-
         <div
           className="
             flex-1
@@ -186,44 +137,19 @@ export default function Sidebar({
             py-5
           "
         >
-
-          {
-            navigation.map(
-              (section) => (
-
-                <SidebarSection
-
-                  key={
-                    section.title
-                  }
-
-                  title={
-                    section.title
-                  }
-
-                  items={
-                    section.children ?? []
-                  }
-
-                  collapsed={
-                    collapsed
-                  }
-
-                />
-
-              )
-            )
-          }
-
-
+          {navigation.map((section) => (
+            <SidebarSection
+              key={section.title}
+              title={section.title}
+              items={section.children ?? []}
+              collapsed={collapsed}
+              onNavigate={onClose}
+            />
+          ))}
         </div>
 
-
-
-
-
+        {/* Footer */}
         {!collapsed && (
-
           <div
             className="
               border-t
@@ -231,35 +157,16 @@ export default function Sidebar({
               p-4
             "
           >
-
-            <p
-              className="
-                text-xs
-                text-slate-500
-              "
-            >
+            <p className="text-xs text-slate-500">
               Axylum ERP
             </p>
 
-
-            <p
-              className="
-                text-xs
-                text-slate-600
-              "
-            >
+            <p className="text-xs text-slate-600">
               Version 1.0.0
             </p>
-
-
           </div>
-
         )}
-
-
       </aside>
-
-
     </>
   );
 }

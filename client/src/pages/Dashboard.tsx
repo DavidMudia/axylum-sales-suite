@@ -1,4 +1,5 @@
 // src/pages/Dashboard.tsx
+
 import {
   DollarSign,
   ShoppingCart,
@@ -25,116 +26,233 @@ import QuickActions from "../components/dashboard/QuickActions";
 import RecentOrders from "../components/dashboard/RecentOrders";
 import ActivityFeed from "../components/dashboard/ActivityFeed";
 
-import type { Product } from "../api/product"; // ✅ added
+import type { Product } from "../api/product";
 
 export default function Dashboard() {
-  const { data, isLoading, error } = useDashboard();
+  const {
+    data,
+    isLoading,
+    error,
+  } = useDashboard();
 
-  // Fetch additional real-time stats for alerts
-  const { data: poStats, isLoading: poLoading } = usePurchaseOrderStats();
-  const { data: refundStats, isLoading: refundLoading } = useRefundStats();
-  const { data: waybillStats, isLoading: waybillLoading } = useWaybillStats();
-  const { data: productsData, isLoading: productsLoading } = useProducts(undefined, 1);
+  // --------------------------------------------------------------------------
+  // Additional dashboard statistics
+  // --------------------------------------------------------------------------
 
-  if (isLoading || poLoading || refundLoading || waybillLoading || productsLoading) {
+  const {
+    data: poStats,
+    isLoading: poLoading,
+  } = usePurchaseOrderStats();
+
+  const {
+    data: refundStats,
+    isLoading: refundLoading,
+  } = useRefundStats();
+
+  const {
+    data: waybillStats,
+    isLoading: waybillLoading,
+  } = useWaybillStats();
+
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+  } = useProducts(undefined, 1);
+
+  // --------------------------------------------------------------------------
+  // Loading
+  // --------------------------------------------------------------------------
+
+  if (
+    isLoading ||
+    poLoading ||
+    refundLoading ||
+    waybillLoading ||
+    productsLoading
+  ) {
     return <DashboardSkeleton />;
   }
 
+  // --------------------------------------------------------------------------
+  // Error
+  // --------------------------------------------------------------------------
+
   if (error) {
     return (
-      <div className="rounded-xl bg-red-100 p-6 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-        Failed to load dashboard.
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
+        <h2 className="font-semibold">
+          Failed to load dashboard
+        </h2>
+
+        <p className="mt-1 text-sm text-red-600">
+          Please refresh the page and try again.
+        </p>
       </div>
     );
   }
 
-  // Build alerts object with real data
+  // --------------------------------------------------------------------------
+  // Alerts
+  // --------------------------------------------------------------------------
+
   const alerts = {
     lowStock: data?.alerts?.lowStock ?? 0,
-    pendingPurchaseOrders: poStats?.pendingApproval ?? 0,
-    pendingRefunds: refundStats?.pending ?? 0,
-    pendingWaybills: waybillStats?.pending ?? 0,
+    pendingPurchaseOrders:
+      poStats?.pendingApproval ?? 0,
+    pendingRefunds:
+      refundStats?.pending ?? 0,
+    pendingWaybills:
+      waybillStats?.pending ?? 0,
   };
 
-  // Low stock products
-  const lowStockProducts = (productsData?.data ?? [])
-    .filter((p: Product) => p.currentStock <= p.reorderLevel) // ✅ typed
-    .map((p: Product) => ({                                   // ✅ typed
-      id: p.id,
-      name: p.name,
-      quantity: p.currentStock,
-      minimumStock: p.reorderLevel,
+  // --------------------------------------------------------------------------
+  // Low-stock products
+  // --------------------------------------------------------------------------
+
+  const lowStockProducts = (
+    productsData?.data ?? []
+  )
+    .filter(
+      (product: Product) =>
+        product.currentStock <= product.reorderLevel
+    )
+    .map((product: Product) => ({
+      id: product.id,
+      name: product.name,
+      quantity: product.currentStock,
+      minimumStock: product.reorderLevel,
     }));
 
-  return (
-    <div className="space-y-8">
-      <PageHeader title="Dashboard" subtitle="Business overview" />
+  // --------------------------------------------------------------------------
+  // Dashboard
+  // --------------------------------------------------------------------------
 
-      {/* KPI CARDS */}
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+  return (
+    <main className="min-w-0 space-y-6 sm:space-y-8">
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Header */}
+      {/* ------------------------------------------------------------------ */}
+
+      <PageHeader
+        title="Dashboard"
+        subtitle="Business overview"
+      />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* KPI Cards */}
+      {/* ------------------------------------------------------------------ */}
+
+      <section
+        aria-label="Business statistics"
+        className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4"
+      >
+
         <StatCard
           title="Revenue"
-          value={`₦${Number(data?.cards?.revenue ?? 0).toLocaleString()}`}
-          icon={<DollarSign />}
+          value={`₦${Number(
+            data?.cards?.revenue ?? 0
+          ).toLocaleString()}`}
+          icon={<DollarSign size={20} />}
         />
+
         <StatCard
           title="Customers"
           value={data?.cards?.customers ?? 0}
           icon={<Users />}
         />
+
         <StatCard
           title="Products"
           value={data?.cards?.products ?? 0}
           icon={<Package />}
         />
+
         <StatCard
           title="Sales Orders"
           value={data?.cards?.salesOrders ?? 0}
           icon={<ShoppingCart />}
         />
+
         <StatCard
           title="Inventory Value"
-          value={`₦${Number(data?.cards?.inventoryValue ?? 0).toLocaleString()}`}
+          value={`₦${Number(
+            data?.cards?.inventoryValue ?? 0
+          ).toLocaleString()}`}
           icon={<Warehouse />}
         />
+
         <StatCard
           title="Payments Received"
-          value={`₦${Number(data?.cards?.paymentsReceived ?? 0).toLocaleString()}`}
+          value={`₦${Number(
+            data?.cards?.paymentsReceived ?? 0
+          ).toLocaleString()}`}
           icon={<CreditCard />}
         />
+
         <StatCard
           title="Waybills"
           value={data?.cards?.waybills ?? 0}
           icon={<Truck />}
         />
+
         <StatCard
           title="Low Stock"
           value={alerts.lowStock}
           icon={<AlertTriangle />}
         />
-      </div>
 
-      {/* CHART + ALERTS */}
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <RevenueCard data={data?.revenueTrend ?? []} />
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Revenue + Alerts */}
+      {/* ------------------------------------------------------------------ */}
+
+      <section className="grid min-w-0 gap-6 xl:grid-cols-3">
+
+        <div className="min-w-0 xl:col-span-2">
+          <RevenueCard
+            data={data?.revenueTrend ?? []}
+          />
         </div>
-        <AlertsCard
-          alerts={alerts}
-          lowStockProducts={lowStockProducts}
-        />
-      </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <RecentOrders orders={data?.recentOrders ?? []} />
+        <div className="min-w-0">
+          <AlertsCard
+            alerts={alerts}
+            lowStockProducts={lowStockProducts}
+          />
         </div>
-        <ActivityFeed activities={data?.recentActivity ?? []} />
-      </div>
 
-      <div className="mt-6">
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Recent Orders + Activity */}
+      {/* ------------------------------------------------------------------ */}
+
+      <section className="grid min-w-0 gap-6 xl:grid-cols-3">
+
+        <div className="min-w-0 xl:col-span-2">
+          <RecentOrders
+            orders={data?.recentOrders ?? []}
+          />
+        </div>
+
+        <div className="min-w-0">
+          <ActivityFeed
+            activities={data?.recentActivity ?? []}
+          />
+        </div>
+
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Quick Actions */}
+      {/* ------------------------------------------------------------------ */}
+
+      <section className="min-w-0">
         <QuickActions />
-      </div>
-    </div>
+      </section>
+
+    </main>
   );
 }

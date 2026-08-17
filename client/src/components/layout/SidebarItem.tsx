@@ -6,6 +6,7 @@ type Props = {
   title: string;
   path: string;
   collapsed: boolean;
+  onNavigate: () => void;
 };
 
 export default function SidebarItem({
@@ -13,10 +14,12 @@ export default function SidebarItem({
   title,
   path,
   collapsed,
+  onNavigate,
 }: Props) {
   return (
     <NavLink
       to={path}
+      onClick={onNavigate}
       className={({ isActive }) =>
         `
         group

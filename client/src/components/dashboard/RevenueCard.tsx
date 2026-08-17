@@ -16,7 +16,6 @@ type Props = {
 export default function RevenueCard({
   data,
 }: Props) {
-
   const revenue = data.reduce(
     (sum, item) => sum + item.revenue,
     0
@@ -27,92 +26,161 @@ export default function RevenueCard({
 
   return (
     <Card className="overflow-hidden">
-
       {/* Header */}
+      <div className="border-b border-slate-200/70">
+        <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between lg:p-6">
 
-      <div className="flex flex-col gap-6 border-b border-slate-200/70 p-6 md:flex-row md:items-center md:justify-between">
-
-        <div>
-
-          <div className="flex items-center gap-2">
-
-            <div className="rounded-xl bg-indigo-100 p-2">
-
+          {/* Title */}
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-indigo-100
+              "
+            >
               <TrendingUp
                 size={18}
                 className="text-indigo-600"
               />
-
             </div>
 
-            <div>
-
-              <h2 className="text-xl font-semibold text-slate-900">
+            <div className="min-w-0">
+              <h2
+                className="
+                  truncate
+                  text-lg
+                  font-semibold
+                  text-slate-900
+                  sm:text-xl
+                "
+              >
                 Revenue Overview
               </h2>
 
-              <p className="text-sm text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
                 Monthly business performance
               </p>
+            </div>
+          </div>
 
+          {/* Metrics */}
+          <div
+            className="
+              grid
+              grid-cols-2
+              divide-x
+              divide-slate-200
+              rounded-xl
+              bg-slate-50
+              lg:min-w-[380px]
+            "
+          >
+            {/* Total Revenue */}
+            <div className="min-w-0 px-3 py-3 sm:px-4">
+              <p
+                className="
+                  text-[10px]
+                  font-medium
+                  uppercase
+                  tracking-wide
+                  text-slate-500
+                  sm:text-xs
+                "
+              >
+                Total Revenue
+              </p>
+
+              <p
+                className="
+                  mt-1
+                  truncate
+                  text-lg
+                  font-bold
+                  text-slate-900
+                  sm:text-xl
+                  lg:text-2xl
+                "
+                title={`₦${revenue.toLocaleString()}`}
+              >
+                ₦{revenue.toLocaleString()}
+              </p>
             </div>
 
-          </div>
+            {/* Current Month */}
+            <div className="min-w-0 px-3 py-3 sm:px-4">
+              <p
+                className="
+                  text-[10px]
+                  font-medium
+                  uppercase
+                  tracking-wide
+                  text-slate-500
+                  sm:text-xs
+                "
+              >
+                Current Month
+              </p>
 
-        </div>
+              <div className="mt-1 flex min-w-0 items-center gap-2">
+                <p
+                  className="
+                    min-w-0
+                    truncate
+                    text-lg
+                    font-bold
+                    text-slate-900
+                    sm:text-xl
+                    lg:text-2xl
+                  "
+                  title={`₦${currentMonth.toLocaleString()}`}
+                >
+                  ₦{currentMonth.toLocaleString()}
+                </p>
 
-        <div className="grid grid-cols-2 gap-6">
-
-          <div>
-
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              Total Revenue
-            </p>
-
-            <h3 className="mt-1 text-2xl font-bold text-slate-900">
-              ₦{revenue.toLocaleString()}
-            </h3>
-
-          </div>
-
-          <div>
-
-            <p className="text-xs uppercase tracking-wide text-slate-500">
-              Current Month
-            </p>
-
-            <div className="mt-1 flex items-center gap-2">
-
-              <h3 className="text-2xl font-bold text-slate-900">
-                ₦{currentMonth.toLocaleString()}
-              </h3>
-
-              <span className="flex items-center rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
-
-                <ArrowUpRight size={14} />
-
-                18%
-
-              </span>
-
+                <span
+                  className="
+                    inline-flex
+                    shrink-0
+                    items-center
+                    gap-0.5
+                    rounded-full
+                    bg-emerald-100
+                    px-1.5
+                    py-0.5
+                    text-[10px]
+                    font-semibold
+                    text-emerald-700
+                    sm:px-2
+                    sm:py-1
+                    sm:text-xs
+                  "
+                >
+                  <ArrowUpRight size={12} />
+                  18%
+                </span>
+              </div>
             </div>
-
           </div>
-
         </div>
-
       </div>
 
       {/* Chart */}
-
-      <div className="p-6">
-
-        <RevenueChart
-          data={data}
-        />
-
+      <div
+        className="
+          px-3
+          py-4
+          sm:p-5
+          lg:p-6
+        "
+      >
+        <RevenueChart data={data} />
       </div>
-
     </Card>
   );
 }

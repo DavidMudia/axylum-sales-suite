@@ -4,7 +4,7 @@ export default function DashboardSkeleton() {
 
       <div className="h-8 w-60 rounded bg-slate-300 dark:bg-slate-700" />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 
         {Array.from({
           length: 8,

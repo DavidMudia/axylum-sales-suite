@@ -106,65 +106,114 @@ export default function SalesOrders() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <PageHeader title="Sales Orders" subtitle="Manage customer orders from creation to delivery." />
-        <PermissionGate permission={PERMISSIONS.SALES_ORDER.CREATE}>
-          <Button onClick={() => setDrawerOpen(true)}>
-            <Plus size={18} /> New Order
-          </Button>
-        </PermissionGate>
-      </div>
+    <div className="space-y-5 sm:space-y-6 lg:space-y-8">
+      <div className="flex items-center justify-between gap-4">
+  <PageHeader
+    title="Sales Orders"
+    subtitle="Manage customer orders from creation to delivery."
+  />
+
+  <PermissionGate permission={PERMISSIONS.SALES_ORDER.CREATE}>
+    <Button
+      onClick={() => setDrawerOpen(true)}
+      className="shrink-0"
+    >
+      <Plus size={18} />
+      <span className="hidden sm:inline">
+        New Order
+      </span>
+      <span className="sm:hidden">
+        New
+      </span>
+    </Button>
+  </PermissionGate>
+</div>
 
       {!statsLoading && stats && (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">Total</p>
-            <h3 className="mt-2 text-2xl font-bold">{stats.totalOrders}</h3>
-          </div>
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">Pending</p>
-            <h3 className="mt-2 text-2xl font-bold text-yellow-600">{stats.pending}</h3>
-          </div>
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">Approved</p>
-            <h3 className="mt-2 text-2xl font-bold text-blue-600">{stats.approved}</h3>
-          </div>
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">Delivered</p>
-            <h3 className="mt-2 text-2xl font-bold text-emerald-600">{stats.delivered}</h3>
-          </div>
-          <div className="rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">Cancelled</p>
-            <h3 className="mt-2 text-2xl font-bold text-red-500">{stats.cancelled}</h3>
-          </div>
-        </div>
-      )}
+  <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-5">
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Input
-            placeholder="Search by order # or customer..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          />
-          <select
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="PROCESSING">Processing</option>
-            <option value="READY_FOR_LOADING">Ready for Loading</option>
-            <option value="LOADED">Loaded</option>
-            <option value="DISPATCHED">Dispatched</option>
-            <option value="DELIVERED">Delivered</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </div>
-      </div>
+    <Stat
+      label="Total"
+      value={stats.totalOrders}
+    />
+
+    <Stat
+      label="Pending"
+      value={stats.pending}
+      valueClass="text-yellow-600"
+    />
+
+    <Stat
+      label="Approved"
+      value={stats.approved}
+      valueClass="text-blue-600"
+    />
+
+    <Stat
+      label="Delivered"
+      value={stats.delivered}
+      valueClass="text-emerald-600"
+    />
+
+    <Stat
+      label="Cancelled"
+      value={stats.cancelled}
+      valueClass="text-red-500"
+    />
+
+  </div>
+)}
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5">
+  <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
+
+    <Input
+      placeholder="Search by order # or customer..."
+      value={search}
+      onChange={(e) => {
+        setSearch(e.target.value);
+        setPage(1);
+      }}
+    />
+
+    <select
+      className="
+        w-full
+        rounded-xl
+        border
+        border-slate-300
+        bg-white
+        px-4
+        py-2.5
+        text-sm
+        text-slate-700
+        outline-none
+        transition
+        focus:border-indigo-500
+        focus:ring-2
+        focus:ring-indigo-100
+      "
+      value={statusFilter}
+      onChange={(e) => {
+        setStatusFilter(e.target.value);
+        setPage(1);
+      }}
+    >
+      <option value="">All Statuses</option>
+      <option value="PENDING">Pending</option>
+      <option value="APPROVED">Approved</option>
+      <option value="PROCESSING">Processing</option>
+      <option value="READY_FOR_LOADING">
+        Ready for Loading
+      </option>
+      <option value="LOADED">Loaded</option>
+      <option value="DISPATCHED">Dispatched</option>
+      <option value="DELIVERED">Delivered</option>
+      <option value="CANCELLED">Cancelled</option>
+    </select>
+
+  </div>
+</div>
 
       {isLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white py-24 text-center">Loading orders...</div>
@@ -193,6 +242,29 @@ export default function SalesOrders() {
         onSubmit={editingOrder ? handleUpdate : handleCreate}
         isSubmitting={isSubmitting}
       />
+    </div>
+  );
+}
+function Stat({
+  label,
+  value,
+  valueClass = "text-slate-900",
+}: {
+  label: string;
+  value: number;
+  valueClass?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+      <p className="text-xs font-medium text-slate-500 sm:text-sm">
+        {label}
+      </p>
+
+      <h3
+        className={`mt-1 text-2xl font-bold tracking-tight sm:mt-2 sm:text-3xl ${valueClass}`}
+      >
+        {value.toLocaleString()}
+      </h3>
     </div>
   );
 }

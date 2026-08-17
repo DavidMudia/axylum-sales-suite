@@ -1,15 +1,17 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
+
 import Card from "../ui/Card";
 
 type Props = {
   title: string;
   value: string | number;
   icon: ReactNode;
-
   change?: number;
   changeLabel?: string;
-
   iconColor?: string;
 };
 
@@ -21,67 +23,118 @@ export default function StatCard({
   changeLabel,
   iconColor = "text-indigo-600",
 }: Props) {
-  const positive = change !== undefined && change >= 0;
+  const positive =
+    change !== undefined && change >= 0;
 
   return (
     <Card className="group h-full">
-  <div className="flex items-start justify-between gap-6">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
 
-    <div className="min-w-0 flex-1">
+        {/* Content */}
+        <div className="min-w-0 flex-1">
 
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-        {title}
-      </p>
-
-      <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
-        {value}
-      </h2>
-
-      {change !== undefined && (
-        <div className="mt-5 flex items-center gap-2 text-sm">
-
-          <span
-            className={`flex items-center gap-1 font-semibold ${
-              positive
-                ? "text-emerald-600"
-                : "text-red-600"
-            }`}
+          <p
+            className="
+              truncate
+              text-[10px]
+              font-semibold
+              uppercase
+              tracking-[0.08em]
+              text-slate-500
+              sm:text-[11px]
+              sm:tracking-[0.12em]
+            "
           >
-            {positive
-              ? <ArrowUpRight size={16} />
-              : <ArrowDownRight size={16} />}
+            {title}
+          </p>
 
-            {Math.abs(change)}%
-          </span>
+          <h2
+            className="
+              mt-1.5
+              truncate
+              text-xl
+              font-bold
+              tracking-tight
+              text-slate-900
+              sm:mt-2
+              sm:text-2xl
+            "
+          >
+            {value}
+          </h2>
 
-          {changeLabel && (
-            <span className="text-slate-500">
-              {changeLabel}
-            </span>
+          {change !== undefined && (
+            <div
+              className="
+                mt-2
+                flex
+                min-w-0
+                items-center
+                gap-1
+                text-[10px]
+                sm:mt-2
+                sm:text-xs
+              "
+            >
+              <span
+                className={`
+                  flex
+                  shrink-0
+                  items-center
+                  gap-0.5
+                  font-semibold
+                  ${
+                    positive
+                      ? "text-emerald-600"
+                      : "text-red-600"
+                  }
+                `}
+              >
+                {positive ? (
+                  <ArrowUpRight size={13} />
+                ) : (
+                  <ArrowDownRight size={13} />
+                )}
+
+                {Math.abs(change)}%
+              </span>
+
+              {changeLabel && (
+                <span
+                  className="
+                    min-w-0
+                    truncate
+                    text-slate-500
+                  "
+                >
+                  {changeLabel}
+                </span>
+              )}
+            </div>
           )}
-
         </div>
-      )}
 
-    </div>
+        {/* Icon */}
+        <div
+          className={`
+            flex
+            h-8
+            w-8
+            shrink-0
+            items-center
+            justify-center
+            rounded-lg
+            bg-slate-100
+            ${iconColor}
+            sm:h-10
+            sm:w-10
+            sm:rounded-xl
+          `}
+        >
+          {icon}
+        </div>
 
-    <div
-      className={`
-        flex
-        h-14
-        w-14
-        shrink-0
-        items-center
-        justify-center
-        rounded-xl
-        bg-slate-100
-        ${iconColor}
-      `}
-    >
-      {icon}
-    </div>
-
-  </div>
-</Card>
+      </div>
+    </Card>
   );
 }
